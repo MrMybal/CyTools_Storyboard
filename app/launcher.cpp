@@ -11,7 +11,9 @@ int WINAPI wWinMain(HINSTANCE, HINSTANCE, PWSTR arguments, int) {
     GetModuleFileNameW(nullptr, buffer, 32768);
     std::wstring root(buffer);
     root.resize(root.find_last_of(L"\\/"));
+    // venv layout (runtime\python\Scripts\pythonw.exe) or portable layout (runtime\python\pythonw.exe)
     std::wstring python = root + L"\\runtime\\python\\Scripts\\pythonw.exe";
+    if (GetFileAttributesW(python.c_str()) == INVALID_FILE_ATTRIBUTES) python = root + L"\\runtime\\python\\pythonw.exe";
     std::wstring bootstrap = root + L"\\runtime\\bootstrap.py";
     if (GetFileAttributesW(python.c_str()) == INVALID_FILE_ATTRIBUTES ||
         GetFileAttributesW(bootstrap.c_str()) == INVALID_FILE_ATTRIBUTES) {

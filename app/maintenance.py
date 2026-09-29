@@ -80,7 +80,7 @@ def repository(value):
 
 def settings():
     value = read_json(SETTINGS / 'updates.json')
-    value.setdefault('tool_repository', '')
+    value.setdefault('tool_repository', local_release().get('repository', ''))
     value.setdefault('auto_check', False)
     return value
 
