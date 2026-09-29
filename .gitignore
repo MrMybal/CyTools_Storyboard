@@ -1,0 +1,47 @@
+# What is published is the application: app/, the launchers' sources and the user guide.
+# Everything that belongs to the person using the Tool, or to this machine, stays local.
+
+# User data: storyboard projects and their backups, exports, jobs, logs, settings (including
+# the UI preferences), reports and screenshots. Nothing here is shipped.
+/data/
+
+# The private Python environment, downloads, staged updates, backups and the launcher build output.
+/runtime/
+
+# Built binaries: the launcher is built by app/build_launcher.ps1 and attached to a release.
+*.exe
+*.dll
+*.pdb
+*.obj
+
+# The CyToolsCore SDK is installed from its own repository, not redistributed here.
+/app/packages/*.whl
+
+# Python and test caches.
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+.cytools/
+
+# Weights and rendered media never enter the repository, wherever they land.
+*.gguf
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.onnx
+*.mp4
+*.mkv
+*.nut
+*.wav
+
+# Local and editor files.
+.env
+.env.*
+*.log
+*.tmp
+*.bak
+*.importing
+.vscode/
+.idea/
