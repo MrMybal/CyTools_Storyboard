@@ -1,0 +1,76 @@
+CyTools Storyboard - licences and sources
+==========================================
+
+This folder ships with every copy of CyTools Storyboard (repository, portable build and
+application update). It lists the licences of the components the application contains or
+downloads, and where their sources are.
+
+1. CyTools Storyboard
+---------------------
+The application's own code (app/, the launchers) is licensed under the GNU General Public
+License v3.0 only. Full text: LICENSE, at the root of the application folder.
+Source: https://github.com/MrMybal/CyTools_Storyboard
+
+2. CyToolsCore SDK (MIT)
+------------------------
+CyTools Storyboard runs on the CyToolsCore SDK, version 0.10.1, licensed under the MIT
+License, Copyright (c) 2026 Cyberalien. Full text: LICENCES/CyToolsCore-MIT.txt (also kept
+as app/LICENSE-CyToolsCore.txt). The SDK is installed as a Python package in the private
+environment (runtime/python); its installed metadata carries the same licence.
+
+- CyToolsCore source and releases: https://github.com/MrMybal/CyToolsCore
+  (version 0.10.1, commit a8d200f2d0baaade1633e0683663b4506c595f74)
+- Creating and integrating a CyTool:
+  https://github.com/MrMybal/CyToolsCore/blob/main/Docs/CreatingYourFirstCyTool.md
+  https://github.com/MrMybal/CyToolsCore/blob/main/Docs/AgentGuide.md
+- Licensing and redistribution:
+  https://github.com/MrMybal/CyToolsCore/blob/main/Docs/Licensing.md
+- Updating an existing product:
+  https://github.com/MrMybal/CyToolsCore/blob/main/Docs/UpdateExistingProducts.md
+- CyUEMCPSDK (Unreal Engine integration of the same contract; not used by this application):
+  https://github.com/MrMybal/CyUEMCPSDK
+
+Copies of CyToolsCore received earlier under the GPL keep the rights granted with them.
+
+3. Components included in the portable build (runtime/python)
+--------------------------------------------------------------
+The portable Windows build contains a private Python and the packages below. Each package
+keeps its full licence text in its own folder runtime/python/Lib/site-packages/<name>.dist-info/
+(or licenses/ inside it); the Python licence is runtime/python/LICENSE.txt.
+
+- Python 3.11.9 (official NuGet build) - PSF License - https://www.python.org/
+- Dear ImGui / imgui-bundle 1.92.900 - MIT - https://github.com/pthom/imgui_bundle
+- moderngl 5.12.0, glcontext 3.0.0 - MIT - https://github.com/moderngl/moderngl
+- trimesh 5.1.0 - MIT - https://github.com/mikedh/trimesh
+- NumPy - BSD-3-Clause and bundled notices - https://numpy.org/
+- Pillow - MIT-CMU (HPND) - https://python-pillow.org/
+- imageio, imageio-ffmpeg - BSD-2-Clause - https://github.com/imageio
+- FFmpeg 7.1 executable bundled by imageio-ffmpeg (build by gyan.dev, configured with
+  --enable-gpl --enable-version3): GNU GPL v3.0 - sources at https://ffmpeg.org/download.html
+  and build notes at https://www.gyan.dev/ffmpeg/builds/
+- psutil - BSD-3-Clause - https://github.com/giampaolo/psutil
+- mcp (Model Context Protocol SDK) - MIT - https://github.com/modelcontextprotocol/python-sdk
+- jsonschema, pydantic, starlette, uvicorn, httpx, anyio and their dependencies - MIT, BSD or
+  Apache-2.0 as stated in their own metadata
+- pywin32 - PSF - https://github.com/mhammond/pywin32
+
+4. Components downloaded on demand (not distributed with the application)
+-------------------------------------------------------------------------
+Nothing below is part of the download of the application. Each is fetched by the user from
+its official source when they install the image engine or a model, and keeps its own licence.
+
+- Image engine (runtime/engines/image): ComfyUI v0.38.0 - GNU GPL v3.0 -
+  https://github.com/comfyanonymous/ComfyUI ; PyTorch - BSD-3-Clause - https://pytorch.org/
+  and the dependencies listed in ComfyUI's requirements.txt.
+- Image models (data/models/comfyui), each under its own licence, shown in the application
+  before download:
+  Qwen-Image 2.1 and its ControlNet - Qwen Research License Agreement (non-commercial) -
+  https://huggingface.co/Qwen/Qwen-Image-2.1 ; repackaged files:
+  https://huggingface.co/Comfy-Org/Qwen-Image-2.1
+  Qwen-Image-Edit 2511 and Qwen-Image 2512 - Apache-2.0 -
+  https://huggingface.co/Qwen/Qwen-Image-Edit-2511 , https://huggingface.co/Qwen/Qwen-Image-2512
+  Lightning LoRAs - https://huggingface.co/lightx2v
+- MiniMax H3 (used by exported films, never run by this application) - MiniMax H3 Community
+  License - https://huggingface.co/Comfy-Org/MiniMax-H3
+
+The MIT licence of the SDK does not change the licences of these components or models.

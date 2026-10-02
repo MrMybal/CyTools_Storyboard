@@ -1,6 +1,7 @@
 # CyTools_Storyboard — developer notes
 
-Storyboard editor built on CyToolsCore 0.9.0 (scaffolded with `cytools new --desktop`).
+Storyboard editor built on CyToolsCore 0.10.1, MIT (scaffolded with `cytools new --desktop` on 0.9.0, migrated to
+0.10.1 on 02/10/2026: `LICENSE-CyToolsCore.txt`, `../LICENCES/`, `exclusiveGroups` on the image model operations).
 
 | Path | Content |
 |---|---|
@@ -33,7 +34,7 @@ From the Tool folder, with Python 3.11 and `git` on the PATH:
 
 ```
 py -3.11 -m venv runtime\python
-runtime\python\Scripts\python.exe -m pip install "cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@442f537"
+runtime\python\Scripts\python.exe -m pip install "cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@a8d200f2d0baaade1633e0683663b4506c595f74"
 runtime\python\Scripts\python.exe -m pip install -r app\requirements.txt
 powershell -File app\build_launcher.ps1
 ```

@@ -7,7 +7,8 @@ Writes runtime/build/release/v<version>/:
                                        without bytecode, tests included; entries start with app/
   CyTools_Storyboard-<version>-win64.zip (+ .sha256)
                                        portable Windows build: launcher, runtime/bootstrap.py, app/, docs,
-                                       LICENSE and a private Python 3.11 (official NuGet build) with the
+                                       LICENSE, LICENCES/ (SDK licence, sources and third-party notices)
+                                       and a private Python 3.11 (official NuGet build) with the
                                        requirements and the pinned CyToolsCore SDK already installed.
   CyTools_Storyboard.exe (+ .sha256)  the launcher alone
   SHA256SUMS.txt
@@ -32,8 +33,9 @@ APP = Path(__file__).resolve().parents[1]
 ROOT = APP.parent
 PYTHON_NUGET_VERSION = '3.11.9'
 PYTHON_NUGET_URL = 'https://www.nuget.org/api/v2/package/python/' + PYTHON_NUGET_VERSION
-SDK_REQUIREMENT = 'cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@442f537'
+SDK_REQUIREMENT = 'cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@a8d200f2d0baaade1633e0683663b4506c595f74'
 EXCLUDED_DIRS = {'__pycache__', '.pytest_cache'}
+LICENCE_FILES = ('CyToolsCore-MIT.txt', 'SOURCES.txt')
 EXCLUDED_SUFFIXES = {'.pyc', '.pyo', '.obj'}
 
 
@@ -115,7 +117,10 @@ def build_portable_python(destination, nupkg):
     # anywhere else and would carry that path; the application only uses python(w).exe.
     for launcher in (destination / 'Scripts').glob('*.exe'):
         launcher.unlink()
-    check = subprocess.run([str(python), '-c', 'import cytools_core, imgui_bundle, moderngl, trimesh, imageio_ffmpeg, numpy, PIL, psutil; print("ok")'],
+    check = subprocess.run([str(python), '-c', 'import cytools_core, imgui_bundle, moderngl, trimesh, imageio_ffmpeg, numpy, PIL, psutil; '
+                            'import importlib.metadata as m; md = m.metadata("cytools-core"); '
+                            'assert md["Version"] == "0.10.1" and md["License-Expression"] == "MIT", (md["Version"], md["License-Expression"]); '
+                            'print("ok")'],
                            capture_output=True, text=True, env=env)
     if check.returncode != 0 or 'ok' not in check.stdout:
         raise RuntimeError('portable Python import check failed:\n' + check.stdout + check.stderr)
@@ -166,6 +171,10 @@ def build_portable_zip(target, version, nupkg):
             if not source.exists():
                 raise RuntimeError('missing at the Tool root: ' + name)
             shutil.copy2(source, stage / name)
+        for name in LICENCE_FILES:
+            if not (ROOT / 'LICENCES' / name).is_file():
+                raise RuntimeError('missing licence file: LICENCES/' + name)
+        shutil.copytree(ROOT / 'LICENCES', stage / 'LICENCES')
         (stage / 'data').mkdir()
         (stage / 'data' / 'README.md').write_text(
             '# data/\n\nRuntime data of CyTools_Storyboard, created by the application: storyboard projects\n'

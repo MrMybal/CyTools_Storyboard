@@ -358,6 +358,13 @@ runtime\python\Scripts\python.exe app\tool.py invoke create_storyboard --params 
 runtime\python\Scripts\python.exe app\tool.py mcp
 ```
 
+## Licences
+
+Le dossier `LICENCES` (textes en anglais) accompagne chaque copie de l'application :
+`CyToolsCore-MIT.txt` (le SDK CyToolsCore 0.10.1, sous licence MIT) et `SOURCES.txt` (licence et
+source de chaque composant inclus ou téléchargé : Python et ses paquets, FFmpeg, moteur d'images,
+modèles). Le code propre de l'application reste sous GPL-3.0 (`LICENSE`).
+
 ## Limites (30/09/2026)
 
 - Images (onglet Images) : le moteur réel a été installé et démarré sur cette machine (ComfyUI

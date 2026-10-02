@@ -11,7 +11,7 @@ sys.path.insert(0, str(APP))
 from storyboard import h3film, h3workflow, imagegen, imagemodels, model  # noqa: E402
 from storyboard.pose import NAMES as POSES  # noqa: E402
 
-VERSION = '0.1.0'
+VERSION = '0.2.0'
 PROJECT = {'type': 'string', 'x-cy-kind': 'Directory', 'maxLength': 4096,
            'description': 'Project folder (.cystory) or its storyboard.json; a bare name is looked up in data/projects.'}
 FILE = {'type': 'string', 'x-cy-kind': 'File', 'maxLength': 4096,
@@ -302,10 +302,18 @@ HEAVY = {'ramBytes': 8 * 1024 ** 3, 'cpuThreads': 2}
 NETWORK = {'ramBytes': 1024 ** 3, 'cpuThreads': 2, 'diskBytes': 40 * 1024 ** 3}
 
 
+# Operations that use or change the image engine and its model files: they never run at the same time
+# (a model removed or re-downloaded while it renders, the engine reinstalled while it runs).
+IMAGE_ENGINE_OPERATIONS = ('generate_images', 'unload_image_model', 'install_image_engine', 'install_image_model',
+                           'verify_image_model', 'remove_image_model')
+
+
 def image_operations():
     def op(op_id, name, description, inputs, required=(), resources=None, permissions=(), backends=(), progress=True):
         entry = operation(op_id, name, description, inputs, ANY, required=required, progress=progress)
         entry.update(resourceRequirements=resources or LIGHT, permissions=list(permissions), supportedBackends=list(backends))
+        if op_id in IMAGE_ENGINE_OPERATIONS:
+            entry['exclusiveGroups'] = ['image-engine']
         return entry
     return [
         op('plan_images', 'Plan pictures', 'The requests a recipe would send to the image model (prompts, reference '

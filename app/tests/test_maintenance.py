@@ -49,16 +49,17 @@ class MaintenanceTests(unittest.TestCase):
         return stage / 'app'
 
     def test_staged_release_is_activated_then_rolled_back(self):
-        candidate = self.stage('0.2.0')
+        current = json.loads((self.root / 'app' / 'release.json').read_text(encoding='utf-8-sig'))['version']
+        candidate = self.stage('99.0.0')
         run_in(self.root, 'import maintenance, pathlib; maintenance.verify_staged_app(pathlib.Path(%r))' % str(candidate))
         (self.root / 'data' / 'settings' / 'tool-pending.json').write_text(json.dumps(
-            {'app': str(candidate.relative_to(self.root)), 'version': '0.2.0'}))
+            {'app': str(candidate.relative_to(self.root)), 'version': '99.0.0'}))
         self.assertEqual(run_in(self.root, 'import maintenance; print(maintenance.apply_pending())'), 'True')
-        self.assertEqual(json.loads((self.root / 'app' / 'release.json').read_text())['version'], '0.2.0')
+        self.assertEqual(json.loads((self.root / 'app' / 'release.json').read_text())['version'], '99.0.0')
         self.assertEqual((self.root / 'data' / 'inputs' / 'keep.txt').read_text(), 'user data')
         run_in(self.root, 'import maintenance; maintenance.rollback_tool()')
         self.assertEqual(run_in(self.root, 'import maintenance; print(maintenance.apply_pending())'), 'True')
-        self.assertEqual(json.loads((self.root / 'app' / 'release.json').read_text())['version'], '0.1.0')
+        self.assertEqual(json.loads((self.root / 'app' / 'release.json').read_text(encoding='utf-8-sig'))['version'], current)
         self.assertEqual(run_in(self.root, 'import maintenance; print(maintenance.apply_pending())'), 'False')
 
     def test_wrong_identity_or_runtime_is_refused(self):

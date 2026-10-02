@@ -53,7 +53,7 @@ From the Tool folder:
 
 ```
 py -3.11 -m venv runtime\python
-runtime\python\Scripts\python.exe -m pip install "cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@442f537"
+runtime\python\Scripts\python.exe -m pip install "cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@a8d200f2d0baaade1633e0683663b4506c595f74"
 runtime\python\Scripts\python.exe -m pip install -r app\requirements.txt
 powershell -File app\build_launcher.ps1
 ```
@@ -111,9 +111,23 @@ cd app
 ..\runtime\python\Scripts\python.exe tests\mcp_check.py
 ```
 
+## Updates and rollback
+
+The Updates tab installs a new application release from GitHub (the `cytools-app.zip` stream:
+`app/` only), checks it before activating it, never touches `data/`, and keeps the previous
+version for a rollback. Version 0.2.0 moves the SDK from CyToolsCore 0.9.0 (GPL-3.0) to 0.10.1
+(MIT): the portable build ships the 0.10.1 package, `LICENCES/` and `app/LICENSE-CyToolsCore.txt`.
+To return to 0.1.0, use the rollback of the Updates tab, or reinstall the 0.1.0 portable build;
+projects in `data/projects` open in both versions.
+
 ## License
 
-GPL-3.0-only — see [LICENSE](LICENSE). Generated media and the MiniMax H3 weights are not part of
-this repository; the weights follow their own licence (MiniMax H3 Community License).
+The application's own code is GPL-3.0-only — see [LICENSE](LICENSE). It runs on the
+[CyToolsCore](https://github.com/MrMybal/CyToolsCore) SDK 0.10.1, licensed under MIT
+([LICENCES/CyToolsCore-MIT.txt](LICENCES/CyToolsCore-MIT.txt)).
+[LICENCES/SOURCES.txt](LICENCES/SOURCES.txt) lists every component the application contains or
+downloads (Python packages of the portable build, FFmpeg, the image engine, the models), with its
+licence and source. Generated media and model weights are not part of this repository; each model
+follows its own licence.
 
 Maintained by Cyberalien.
