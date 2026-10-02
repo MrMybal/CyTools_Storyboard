@@ -69,6 +69,25 @@ FR = {
     'Back to the project folder': 'Revenir au dossier du projet',
     'This film': 'Ce film',
     'in the ComfyUI workflow': 'dans le workflow ComfyUI',
+    'The panels of a sequence are grouped into H3 segments of about 20 s: H3 cuts between the shots of a segment '
+    'itself, so characters, places and sound stay continuous. A segment may start a few frames before the previous '
+    'one ends (crossfades by default). The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.':
+        "Les cases d'une séquence sont regroupées en segments H3 d'environ 20 s : H3 coupe lui-même entre les plans "
+        "d'un segment, si bien que personnages, lieux et son restent continus. Un segment peut commencer quelques "
+        "images avant la fin du précédent (fondus enchaînés par défaut). Le même film tourne dans CyTools_MiniMaxH3 "
+        "(Colab) ou dans ComfyUI.",
+    'Segments': 'Segments', 'Grouping': 'Regroupement',
+    'one segment per panel': 'un segment par case', 'panels of a sequence together': "les cases d'une séquence ensemble",
+    'panels of the whole film together': 'les cases de tout le film ensemble',
+    'Longest segment (s)': 'Segment le plus long (s)', 'Shots per segment (0 = any)': 'Plans par segment (0 = libre)',
+    'H3 was trained on segments of up to 15 s; longer ones work but motion and faces may drift. Fewer shots per '
+    'segment follow the prompt more closely.':
+        "H3 a été entraîné sur des segments de 15 s au plus ; plus longs, ils marchent mais le mouvement et les visages "
+        "peuvent dériver. Moins de plans par segment suivent le prompt de plus près.",
+    'Shot header in a grouped segment ({shot}, {start}, {end}, {title})':
+        "En-tête d'un plan dans un segment regroupé ({shot}, {start}, {end}, {title})",
+    'Line of dialogue ({name}, {how}, {line})': 'Réplique ({name}, {how}, {line})',
+    'Sound of a shot ({text})': "Son d'un plan ({text})", 'Music of a shot ({text})': "Musique d'un plan ({text})",
 }
 
 

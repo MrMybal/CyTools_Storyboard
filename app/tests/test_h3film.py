@@ -14,6 +14,10 @@ APP = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(APP))
 
 
+# one segment per panel, continuity across cuts: the rules these tests were written for
+PER_PANEL = {'grouping': 'panel', 'overlapOnCuts': True}
+
+
 def image(path, colour):
     from PIL import Image
     Image.new('RGB', (64, 36), colour).save(path)
@@ -78,7 +82,7 @@ class FilmExportTests(unittest.TestCase):
         self.panel('Hands', 1.0, [self.robot['id']], transition='fade to black')
         self.panel('Door', 4.5, [self.robot['id']], transition='crossfade')
         self.panel('Hall', 7.0)
-        film, _, warnings = h.build(self.board)
+        film, _, warnings = h.build(self.board, PER_PANEL)
         timeline_director_rules(film['timeline'])
         segments = film['segments']
         self.assertEqual([s['overlap'] for s in segments], [0, 39, 39, 0, 39])
@@ -88,12 +92,12 @@ class FilmExportTests(unittest.TestCase):
         self.assertEqual(film['frames'], segments[-1]['endFrame'])
         self.assertEqual((film['width'], film['height']), (960, 544))
         self.assertFalse(warnings)
-        no_cut = h.build(self.board, {'overlapOnCuts': False, 'overlapOnFades': True})[0]['segments']
+        no_cut = h.build(self.board, {'grouping': 'panel', 'overlapOnCuts': False, 'overlapOnFades': True})[0]['segments']
         # A panel's transition is the seam after it: Wake cut, Look cut, Hands fade, Door crossfade. Hands lasts
         # 1 s (56-frame segment with 39 carried, 17 new), so the next overlap is cut down to fit inside it.
         self.assertEqual([s['overlap'] for s in no_cut], [0, 0, 0, 5, 39])
-        timeline_director_rules(h.build(self.board, {'overlapOnCuts': False})[0]['timeline'])
-        wide = h.build(self.board, {'shortEdge': 768})[0]
+        timeline_director_rules(h.build(self.board, {'grouping': 'panel', 'overlapOnCuts': False})[0]['timeline'])
+        wide = h.build(self.board, dict(PER_PANEL, shortEdge=768))[0]
         self.assertEqual((wide['width'], wide['height']), (1344, 768))
 
     def test_pictures_numbering_and_prompts(self):
@@ -101,29 +105,42 @@ class FilmExportTests(unittest.TestCase):
         first = image(self.tmp / 'first.png', (10, 10, 120))
         self.panel('Wake', 5, [self.robot['id'], self.room['id']], images=[(sketch, 'sketch'), (first, 'first')])
         self.panel('Guard', 5, [self.nobody['id']])
-        film, files, _ = self.h3film.build(self.board)
+        film, files, _ = self.h3film.build(self.board, PER_PANEL)
         one, two = film['segments']
-        self.assertEqual(one['pictures'], ['<Picture 1> Unit 7', '<Picture 2> first', '<Picture 3> Activation room'])
+        self.assertEqual(one['pictures'], ['<Picture 1> Unit 7', '<Picture 2> Activation room',
+                                           '<Picture 3> first, shot 1'])
         prompt = one['prompt']
         self.assertIn('Ultra-realistic science fiction.', prompt)
-        self.assertIn('<Picture 1> defines the exact identity of Unit 7', prompt)
-        self.assertIn('(ivory armour, black joints)', prompt)
-        self.assertIn('<Picture 2> shows how this shot begins.', prompt)
-        self.assertIn('<Picture 3> shows Activation room (amber strips)', prompt)
-        self.assertNotIn('continue the preceding segment', prompt)
-        self.assertIn('The first 39 frames continue the preceding segment', two['prompt'])
+        self.assertIn('<Picture 1> is Unit 7 (ivory armour, black joints).', prompt)
+        self.assertIn('<Picture 2> is Activation room (amber strips).', prompt)
+        self.assertIn('<Picture 3> is the first frame of shot 1.', prompt)
+        self.assertNotIn('continues directly', prompt)
+        self.assertNotIn('Shot 1', prompt, 'no shot header for a single shot')
+        self.assertIn('It continues directly from the previous shot.', two['prompt'])
         self.assertEqual(two['pictures'], ['<Picture 1> Guard'], 'the identity scope is the panel by default')
-        everyone = self.h3film.build(self.board, {'identityScope': 'film', 'shotPictures': 'all'})[0]['segments']
+        everyone = self.h3film.build(self.board, dict(PER_PANEL, identityScope='film', shotPictures='all'))[0]['segments']
         self.assertEqual(everyone[1]['pictures'], ['<Picture 1> Unit 7', '<Picture 2> Guard'])
-        self.assertEqual(len(everyone[0]['pictures']), 5, 'Unit 7, Guard, first, sketch, room')
+        self.assertEqual(len(everyone[0]['pictures']), 5, 'Unit 7, Guard, room, first, sketch')
         timeline = film['timeline']
         self.assertEqual(len(timeline['images']), len(files), 'each picture file once')
         self.assertEqual(timeline['segmentConfig']['segments'][0]['images'][0],
                          timeline['segmentConfig']['segments'][0]['images'][0])
-        custom = self.h3film.build(self.board, {'identityText': 'Face of {name} = <Picture {n}>.',
-                                                'continuityText': ''})[0]['segments']
+        custom = self.h3film.build(self.board, dict(PER_PANEL, identityText='Face of {name} = <Picture {n}>.',
+                                                     continuityText=''))[0]['segments']
         self.assertIn('Face of Unit 7 = <Picture 1>.', custom[0]['prompt'])
-        self.assertNotIn('preceding segment', custom[1]['prompt'])
+        self.assertNotIn('continues directly', custom[1]['prompt'])
+
+    def test_several_pictures_per_character(self):
+        more = image(self.tmp / 'profile.png', (150, 150, 140))
+        self.board.update_library_item(self.robot['id'], files=[self.board.folder / self.robot['files'][0], more])
+        self.panel('Wake', 5, [self.robot['id'], self.room['id']])
+        one = self.h3film.build(self.board)[0]['segments'][0]
+        self.assertEqual(one['pictures'], ['<Picture 1> Unit 7', '<Picture 2> Activation room'])
+        two = self.h3film.build(self.board, {'identityPictures': 2})[0]['segments'][0]
+        self.assertEqual(two['pictures'], ['<Picture 1> Unit 7', '<Picture 2> Unit 7 (2)', '<Picture 3> Activation room'])
+        self.assertIn('<Picture 2> is Unit 7 again, from another angle.', two['prompt'])
+        with self.assertRaises(self.model.StoryboardError):
+            self.h3film.build(self.board, {'identityPictures': 0})
 
     def test_nine_pictures_at_most_and_bad_options(self):
         refs = []
@@ -159,7 +176,7 @@ class FilmExportTests(unittest.TestCase):
         self.board.update_library_item(self.robot['id'], files=[self.board.folder / self.robot['files'][0], voice])
         self.panel('Wake', 5, [self.robot['id']])
         self.panel('Walk', 6, [self.robot['id'], long_video['id'], talking['id'], rain['id']])
-        film, files, warnings = self.h3film.build(self.board, {'videoSound': True, 'maxReferenceSeconds': 10})
+        film, files, warnings = self.h3film.build(self.board, dict(PER_PANEL, videoSound=True, maxReferenceSeconds=10))
         timeline_director_rules(film['timeline'])
         one, two = film['segments']
         self.assertEqual(one['videos'], [])
@@ -167,8 +184,8 @@ class FilmExportTests(unittest.TestCase):
         self.assertEqual(two['videos'], ['<Video 1> Walk', '<Video 2> Speech'])
         self.assertEqual(two['audios'], ['<Audio 1> voice of Unit 7', '<Audio 2> Rain', '<Audio 3> sound of Speech'],
                          'the silent-free video gives its sound; voices first')
-        self.assertIn('<Video 1> is a motion reference, Walk (tired walk)', two['prompt'])
-        self.assertIn("<Audio 1> is the voice of Unit 7; use it for Unit 7's lines.", two['prompt'])
+        self.assertIn('<Video 1> is a motion reference for Walk', two['prompt'])
+        self.assertIn('<Audio 1> is the voice of Unit 7.', two['prompt'])
         self.assertIn('<Audio 3> is the sound of <Video 2> (Speech).', two['prompt'])
         clips = film['timeline']['videoClips']
         self.assertEqual({c['cytoolsSegment'] for c in clips}, {2})
@@ -210,10 +227,49 @@ class FilmExportTests(unittest.TestCase):
         self.assertEqual((len(segment['pictures']), len(segment['videos']), len(segment['audios'])), (6, 3, 3))
         self.assertTrue(any('left out' in w for w in warnings))
 
+    def test_panels_grouped_by_sequence(self):
+        h = self.h3film
+        first = self.board.doc['sequences'][0]
+        self.panel('Dark', 3, [self.robot['id'], self.room['id']])
+        self.panel('Eyes', 3, [self.robot['id']])
+        lines = self.board.add_panel(first['id'], title='Voice', duration=5.5, references=[self.robot['id']],
+                                     prompt={'action': 'the interface stabilizes', 'sound': 'soft tones',
+                                             'dialogue': [{'speaker': self.nobody['id'], 'line': 'Hello...', 'offScreen': True},
+                                                          {'speaker': self.nobody['id'], 'line': 'Stay calm.', 'offScreen': True}]})
+        self.board.update_panel(lines['id'], transition={'type': 'crossfade', 'duration': 0.5})
+        second = self.board.add_sequence('Hall')
+        for title, seconds in (('Door', 4), ('Walk', 9), ('Glass', 6), ('Crowd', 5)):
+            panel = self.board.add_panel(second['id'], title=title, duration=seconds, prompt={'action': title.lower()})
+            self.board.update_panel(panel['id'], transition={'type': 'cut', 'duration': 0.5})
+        film, _, warnings = h.build(self.board)
+        timeline_director_rules(film['timeline'])
+        segments = film['segments']
+        # sequence 1 (11.5 s) in one window; sequence 2 (24 s) balanced into two windows, never 20 + 4
+        self.assertEqual([[s['title'] for s in seg['shots']] for seg in segments],
+                         [['Dark', 'Eyes', 'Voice'], ['Door', 'Walk'], ['Glass', 'Crowd']])
+        self.assertEqual(segments[0]['title'], 'Sequence 1')
+        self.assertEqual([s['overlap'] for s in segments], [0, 39, 0], 'continuity after the crossfade only')
+        prompt = segments[0]['prompt']
+        self.assertIn('Shot 1 (0.0-3.0 s):', prompt)
+        self.assertIn('Cut. Shot 2 (3.0-6.0 s):', prompt)
+        self.assertIn('Guard (off screen) says: "Hello... Stay calm."', prompt, 'one speech per speaker')
+        self.assertIn('Sound: Soft tones.', prompt)
+        for noise in ('frames', 'final edit', 'precedence', 'overlap'):
+            self.assertNotIn(noise, prompt.lower())
+        self.assertIn('It continues directly from the previous shot.', segments[1]['prompt'])
+        self.assertIn('Dissolve.', h.build(self.board, {'grouping': 'film', 'maxSegmentSeconds': 40})[0]['segments'][0]['prompt'])
+        self.assertAlmostEqual(sum(s['seconds'] for s in segments), film['frames'] / 24)
+        capped = h.build(self.board, {'maxShotsPerSegment': 1})[0]['segments']
+        self.assertEqual(len(capped), 7)
+        short = h.build(self.board, {'maxSegmentSeconds': 10})[0]['segments']
+        self.assertTrue(all(s['requestedSeconds'] <= 10 or len(s['shots']) == 1 for s in short))
+        with self.assertRaises(self.model.StoryboardError):
+            h.build(self.board, {'grouping': 'scene'})
+
     def test_long_panel_warns(self):
         self.panel('Long take', 20)
         _, _, warnings = self.h3film.build(self.board)
-        self.assertIn('beyond the 15 s', warnings[0])
+        self.assertIn('longer than the 15 s', warnings[0])
 
     def test_export_folder_and_workflows(self):
         self.panel('Wake', 5, [self.robot['id']])

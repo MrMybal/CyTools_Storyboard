@@ -268,6 +268,88 @@ Les plans en image ou en dessin 2D n'ont pas de profondeur.
 Le flou des niveaux de fidélité ne s'applique qu'à la profondeur ; la force et la part des
 pas s'appliquent aux deux.
 
+## Images : générer les références dans l'application (onglet Images)
+
+H3 suit d'autant mieux un personnage qu'il en reçoit de vraies images. L'onglet **Images**
+les fabrique dans l'application, à partir de tes images de départ ou d'un texte :
+
+- **Personnage** : choisis un personnage de la bibliothèque. Ses images (les premières, autant
+  que le modèle en accepte) servent de références et l'application génère les vues cochées :
+  face, trois-quarts, profil, dos, portraits... Sans image, les vues partent de sa description.
+- **Lieu** : même principe pour un décor (vue large, contre-champ, plongée, détail), vide ou
+  avec un personnage dedans (« Personnage dans le lieu »).
+- **Plan** : l'image d'un plan. La mise en scène 3D donne le cadrage, le personnage et le lieu
+  du plan donnent l'apparence, le texte du plan donne l'action. « Cadrage venant de la mise en
+  scène 3D » choisit comment : **guide de structure** (la profondeur ou la pose du plateau passe
+  par le ControlNet du modèle ; le modèle ne voit jamais de mannequin gris), **image de mise en
+  scène** (le rendu en mannequins est envoyé comme image, à remplacer), les deux, ou aucun.
+  En automatique, le guide de structure est pris dès que le ControlNet est installé. Le
+  personnage est envoyé avec plusieurs images (« Images par personnage » : sa première image,
+  puis ses vues générées, corps entier d'abord). Quand le plateau contient des mannequins sans
+  référence (une foule), la liste « mannequins sans référence sont » dit au modèle que ce sont
+  d'autres exemplaires d'un personnage.
+- **Prompt libre** : un texte, avec ou sans images de référence.
+
+Chaque vue est une ligne modifiable (case, format, texte) ; « Ajouter une vue » en crée
+d'autres. Les phrases envoyées au modèle sont dans « Phrases », et « Ce qui sera demandé »
+montre le prompt exact de chaque image avant de lancer.
+
+**Générer** lance le calcul ; les images arrivent à droite. **Garder** copie l'image dans le
+projet avec sa recette (prompt, références, graine, modèle) : elle s'ajoute aux images du
+personnage ou du lieu, ou devient la première image du plan — c'est elle que l'export H3
+envoie alors à la place du rendu en mannequins. **Reprendre la graine** réutilise la graine
+d'une image pour les suivantes. Les images non gardées restent dans le dossier du travail.
+
+### LoRA
+
+Dans « Génération », la section **LoRA** liste les fichiers `.safetensors` du dossier
+`data/models/comfyui/loras/` (« Ajouter des fichiers LoRA... » les y copie, « Ouvrir le dossier
+des LoRA » l'ouvre). Coche ceux à appliquer et règle leur force (de -2 à 2) ; ils sont appliqués
+au modèle dans l'ordre de la liste, avant le LoRA « peu de pas » du modèle. Un LoRA est fait pour
+une famille de modèle (Qwen-Image 2.1, Qwen-Image-Edit 2511 ou Qwen-Image 2512) : un LoRA d'une
+autre famille n'a pas d'effet utile. Ses mots déclencheurs se mettent dans le prompt ou dans
+« Ajouté à chaque image ». Les LoRA utilisés sont notés dans la recette de chaque image gardée
+et dans les workflows ComfyUI exportés.
+
+### Moteur et modèles (Installation, en haut à droite de l'onglet)
+
+Rien n'est installé au départ :
+
+1. **Installer ou réparer le moteur** : crée `runtime/engines/image` (Python privé, PyTorch
+   CUDA 13) et télécharge ComfyUI (version fixée) dans `runtime/sources/ComfyUI`. Environ 8 Go.
+2. **Télécharger** un modèle (reprise possible, taille et SHA-256 vérifiés) :
+
+| Modèle | Usage | Taille | Licence |
+|---|---|---|---|
+| Qwen-Image 2.1 (int8) — par défaut | texte seul et jusqu'à 10 références | 17,3 Go | Qwen Research (non commerciale) |
+| Qwen-Image 2.1 ControlNet (int8) | guide de structure des plans (profondeur, pose) | 3,8 Go | Qwen Research (non commerciale) |
+| Qwen-Image-Edit 2511 (int8) | 1 à 3 références, 4 pas avec son LoRA | 31,0 Go | Apache-2.0 |
+| Qwen-Image 2512 (fp8) | texte seul, 4 pas avec son LoRA | 30,9 Go | Apache-2.0 |
+
+   Les fichiers vont dans `data/models/comfyui/` ; l'encodeur de texte et le VAE communs à 2511
+   et 2512 ne sont téléchargés qu'une fois.
+
+Le moteur est un ComfyUI privé que l'application lance elle-même, en arrière-plan, sur
+`127.0.0.1` seulement. Le modèle **reste en mémoire** entre deux générations (réglage « Garder
+le modèle en mémoire », 30 minutes par défaut, 0 = jusqu'à la fermeture) ; **Décharger** le
+libère tout de suite. Annuler une génération arrête l'image en cours sans décharger le modèle.
+
+**Autre ComfyUI** : en donnant une adresse (le tunnel de ton ComfyUI Colab par exemple), les
+mêmes images sont calculées là-bas au lieu de cet ordinateur ; les modèles doivent alors être
+dans ses dossiers `models/`.
+
+### Les mêmes images dans ComfyUI
+
+**Workflows ComfyUI...** écrit, pour ce qui est choisi à l'écran, un dossier
+`exports/comfyui_images/` avec :
+
+- `<nom>.json` : le workflow à glisser sur la page ComfyUI (tous les plans/vues, chargeurs communs) ;
+- `<nom>_api.json` : le même graphe au format API ;
+- `cytools_images/` : les images de référence, à copier dans `ComfyUI/input/`.
+
+C'est exactement le graphe que l'application calcule ; la note du workflow liste les fichiers
+de modèle attendus.
+
 ## CLI et IA (MCP)
 
 ```
@@ -276,7 +358,22 @@ runtime\python\Scripts\python.exe app\tool.py invoke create_storyboard --params 
 runtime\python\Scripts\python.exe app\tool.py mcp
 ```
 
-## Limites (27/09/2026)
+## Limites (30/09/2026)
+
+- Images (onglet Images) : le moteur réel a été installé et démarré sur cette machine (ComfyUI
+  0.37.0, PyTorch 2.14.0+cu130, RTX 3090, noyaux int8 trouvés), les graphes des trois familles
+  de modèles sont acceptés par le vrai ComfyUI et identiques à ce que sa page produit en
+  chargeant les workflows exportés, le téléchargement avec reprise a été exécuté. Première
+  génération réelle le 30/09/2026 avec Qwen-Image 2.1 : six vues d'un personnage à partir de
+  trois références, 42,6 s par image (25 pas, 1 MP, RTX 3090 déjà occupée par autre chose) ;
+  la vue de dos est sortie de face (texte de la vue renforcé depuis, pas encore revérifié).
+  Plans générés avec le rendu de mise en scène envoyé comme image : résultat inégal (mannequins
+  et blocs gris parfois conservés, proportions fausses avec une seule image du personnage).
+  D'où le guide de structure par ControlNet (ComfyUI 0.38.0) : graphes acceptés par un vrai
+  ComfyUI 0.38.0 et identiques à ceux de sa page, images de profondeur et de pose rendues,
+  ControlNet téléchargé — **aucune image réelle n'a encore été générée avec ce guide**. Qwen-Image-Edit 2511 et Qwen-Image 2512
+  n'ont pas été téléchargés. Le calcul sur un autre ComfyUI n'a été essayé que sur un ComfyUI
+  local sans modèle.
 
 - Film MiniMax H3 : vérifié par le vrai planificateur de Timeline Director et le vrai ComfyUI
   (graphes acceptés, vidéos et sons décodés segment par segment), mais aucun film réel n'a

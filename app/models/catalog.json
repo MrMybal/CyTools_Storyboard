@@ -1,0 +1,282 @@
+{
+ "schemaVersion": 1,
+ "models": [
+  {
+   "id": "qwen-image-2.1-int8",
+   "name": "Qwen-Image 2.1 (int8)",
+   "loader": "qwen21",
+   "kinds": [
+    "edit",
+    "text"
+   ],
+   "default": true,
+   "license": {
+    "name": "Qwen Research License (non-commercial)",
+    "commercialUse": "forbidden",
+    "requiresAcceptance": false,
+    "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+    "notes": "Research and evaluation only; a commercial licence is asked from Qwen."
+   },
+   "control": "qwen-image-2.1-controlnet-int8",
+   "summary": "One model for pictures from a text and from up to 10 reference pictures.",
+   "source": {
+    "kind": "huggingface",
+    "repository": "Comfy-Org/Qwen-Image-2.1",
+    "gated": false,
+    "url": "https://huggingface.co/Qwen/Qwen-Image-2.1",
+    "revision": "cb504a4090723e43f17ad01cec0359490e2de613"
+   },
+   "defaults": {
+    "steps": 25,
+    "guidance": 1.0,
+    "fastSteps": 25,
+    "fastGuidance": 1.0,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "maxReferences": 10,
+    "referenceResolution": 1024,
+    "referenceToken": "<image{n}>",
+    "multiple": 32
+   },
+   "resources": {
+    "vramBytes": 21474836480,
+    "ramBytes": 34359738368
+   },
+   "backend": "comfyui",
+   "family": "image",
+   "directory": "data/models/comfyui",
+   "files": [
+    {
+     "path": "diffusion_models/qwen_image_2.1_int8_convrot.safetensors",
+     "size": 7256783064,
+     "sha256": "cb74113cb03faecd79611b01fd7fd642f0aa60d6f0b95086abee214d75eaa57d",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/cb504a4090723e43f17ad01cec0359490e2de613/diffusion_models/qwen_image_2.1_int8_convrot.safetensors",
+     "role": "unet"
+    },
+    {
+     "path": "text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+     "size": 9350798360,
+     "sha256": "8bfd0f6e12abf2d2d697ecc888e5e90b0d6741d6708f05799f53afa560452e8f",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/cb504a4090723e43f17ad01cec0359490e2de613/text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+     "role": "clip"
+    },
+    {
+     "path": "vae/qwen_image_2.1_vae_bf16.safetensors",
+     "size": 675509688,
+     "sha256": "bb21f7473051e1ac368515dd3f2e15cd44d7a11748ee8823e1ddca3e4876b7c9",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/cb504a4090723e43f17ad01cec0359490e2de613/vae/qwen_image_2.1_vae_bf16.safetensors",
+     "role": "vae"
+    }
+   ],
+   "roles": {
+    "unet": "diffusion_models/qwen_image_2.1_int8_convrot.safetensors",
+    "clip": "text_encoders/qwen3vl_8b_int8_convrot.safetensors",
+    "vae": "vae/qwen_image_2.1_vae_bf16.safetensors"
+   },
+   "downloadBytes": 17283091112
+  },
+  {
+   "id": "qwen-image-2.1-controlnet-int8",
+   "name": "Qwen-Image 2.1 ControlNet (int8)",
+   "loader": "patch",
+   "kinds": [
+    "control"
+   ],
+   "default": false,
+   "license": {
+    "name": "Qwen Research License (non-commercial)",
+    "commercialUse": "forbidden",
+    "requiresAcceptance": false,
+    "url": "https://huggingface.co/Qwen/Qwen-Image-2.1/blob/main/LICENSE",
+    "notes": "Research and evaluation only; a commercial licence is asked from Qwen."
+   },
+   "summary": "Structure guide for Qwen-Image 2.1: a shot follows the depth or the pose of its 3D staging.",
+   "source": {
+    "kind": "huggingface",
+    "repository": "Comfy-Org/Qwen-Image-2.1",
+    "gated": false,
+    "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1",
+    "revision": "cb504a4090723e43f17ad01cec0359490e2de613"
+   },
+   "defaults": {},
+   "resources": {
+    "vramBytes": 4294967296,
+    "ramBytes": 8589934592
+   },
+   "backend": "comfyui",
+   "family": "image",
+   "directory": "data/models/comfyui",
+   "files": [
+    {
+     "path": "model_patches/qwen_image_2.1_fun_controlnet_union_int8_convrot.safetensors",
+     "size": 3779298944,
+     "sha256": "07aa961570ac0e03d4ca936aecd76854d077a33cde69b5092399afba01b3715d",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image-2.1/resolve/cb504a4090723e43f17ad01cec0359490e2de613/model_patches/qwen_image_2.1_fun_controlnet_union_int8_convrot.safetensors",
+     "role": "patch"
+    }
+   ],
+   "roles": {
+    "patch": "model_patches/qwen_image_2.1_fun_controlnet_union_int8_convrot.safetensors"
+   },
+   "downloadBytes": 3779298944
+  },
+  {
+   "id": "qwen-image-edit-2511-int8",
+   "name": "Qwen-Image-Edit 2511 (int8)",
+   "loader": "qwen_edit_plus",
+   "kinds": [
+    "edit"
+   ],
+   "default": false,
+   "license": {
+    "name": "Apache-2.0",
+    "commercialUse": "allowed",
+    "requiresAcceptance": false,
+    "url": "https://www.apache.org/licenses/LICENSE-2.0"
+   },
+   "summary": "Pictures from 1 to 3 reference pictures; 4 steps with its Lightning LoRA.",
+   "source": {
+    "kind": "huggingface",
+    "repository": "Comfy-Org/Qwen-Image-Edit_ComfyUI",
+    "gated": false,
+    "url": "https://huggingface.co/Qwen/Qwen-Image-Edit-2511",
+    "revision": "f68ace85e60b4a02a323e394253731947657b7d2"
+   },
+   "defaults": {
+    "steps": 40,
+    "guidance": 3.0,
+    "fastSteps": 4,
+    "fastGuidance": 1.0,
+    "shift": 3.1,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "maxReferences": 3,
+    "referenceToken": "image {n}",
+    "multiple": 16
+   },
+   "resources": {
+    "vramBytes": 25769803776,
+    "ramBytes": 51539607552
+   },
+   "backend": "comfyui",
+   "family": "image",
+   "directory": "data/models/comfyui",
+   "files": [
+    {
+     "path": "diffusion_models/qwen_image_edit_2511_int8_convrot.safetensors",
+     "size": 20499083824,
+     "sha256": "11b5af5ac601821d73930c84846c9a158e67177356daf927ce1c8d10f3963829",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image-Edit_ComfyUI/resolve/f68ace85e60b4a02a323e394253731947657b7d2/split_files/diffusion_models/qwen_image_edit_2511_int8_convrot.safetensors",
+     "role": "unet"
+    },
+    {
+     "path": "text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "size": 9384670680,
+     "sha256": "cb5636d852a0ea6a9075ab1bef496c0db7aef13c02350571e388aea959c5c0b4",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/1f12b17be14c89b026c51a91d67c32f84bb047bc/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "role": "clip"
+    },
+    {
+     "path": "vae/qwen_image_vae.safetensors",
+     "size": 253806246,
+     "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/1f12b17be14c89b026c51a91d67c32f84bb047bc/split_files/vae/qwen_image_vae.safetensors",
+     "role": "vae"
+    },
+    {
+     "path": "loras/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+     "size": 849608296,
+     "sha256": "22226e8d05d354bb356627d428809f5afd7819399b077238a2b70a82883a904f",
+     "url": "https://huggingface.co/lightx2v/Qwen-Image-Edit-2511-Lightning/resolve/d74eba145674fd7e31b949324e148e21e7118abd/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors",
+     "role": "lora"
+    }
+   ],
+   "roles": {
+    "unet": "diffusion_models/qwen_image_edit_2511_int8_convrot.safetensors",
+    "clip": "text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "vae": "vae/qwen_image_vae.safetensors",
+    "lora": "loras/Qwen-Image-Edit-2511-Lightning-4steps-V1.0-bf16.safetensors"
+   },
+   "downloadBytes": 30987169046
+  },
+  {
+   "id": "qwen-image-2512-fp8",
+   "name": "Qwen-Image 2512 (fp8)",
+   "loader": "qwen_t2i",
+   "kinds": [
+    "text"
+   ],
+   "default": false,
+   "license": {
+    "name": "Apache-2.0",
+    "commercialUse": "allowed",
+    "requiresAcceptance": false,
+    "url": "https://www.apache.org/licenses/LICENSE-2.0"
+   },
+   "summary": "Pictures from a text only; 4 steps with its Lightning LoRA.",
+   "source": {
+    "kind": "huggingface",
+    "repository": "Comfy-Org/Qwen-Image_ComfyUI",
+    "gated": false,
+    "url": "https://huggingface.co/Qwen/Qwen-Image-2512",
+    "revision": "1f12b17be14c89b026c51a91d67c32f84bb047bc"
+   },
+   "defaults": {
+    "steps": 50,
+    "guidance": 4.0,
+    "fastSteps": 4,
+    "fastGuidance": 1.0,
+    "shift": 3.1,
+    "sampler": "euler",
+    "scheduler": "simple",
+    "maxReferences": 0,
+    "referenceToken": "image {n}",
+    "multiple": 16
+   },
+   "resources": {
+    "vramBytes": 25769803776,
+    "ramBytes": 51539607552
+   },
+   "backend": "comfyui",
+   "family": "image",
+   "directory": "data/models/comfyui",
+   "files": [
+    {
+     "path": "diffusion_models/qwen_image_2512_fp8_e4m3fn.safetensors",
+     "size": 20430679144,
+     "sha256": "5dc80554d5d83390046a2f4a94ece06afb7700bf7b0aaf8bde9769793875876b",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/1f12b17be14c89b026c51a91d67c32f84bb047bc/split_files/diffusion_models/qwen_image_2512_fp8_e4m3fn.safetensors",
+     "role": "unet"
+    },
+    {
+     "path": "text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "size": 9384670680,
+     "sha256": "cb5636d852a0ea6a9075ab1bef496c0db7aef13c02350571e388aea959c5c0b4",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/1f12b17be14c89b026c51a91d67c32f84bb047bc/split_files/text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+     "role": "clip"
+    },
+    {
+     "path": "vae/qwen_image_vae.safetensors",
+     "size": 253806246,
+     "sha256": "a70580f0213e67967ee9c95f05bb400e8fb08307e017a924bf3441223e023d1f",
+     "url": "https://huggingface.co/Comfy-Org/Qwen-Image_ComfyUI/resolve/1f12b17be14c89b026c51a91d67c32f84bb047bc/split_files/vae/qwen_image_vae.safetensors",
+     "role": "vae"
+    },
+    {
+     "path": "loras/Qwen-Image-2512-Lightning-4steps-V1.0-bf16.safetensors",
+     "size": 849608296,
+     "sha256": "de0d236e54ecf2c43b32447d13478c6eae0d361b1fed48c69675b084fa240d87",
+     "url": "https://huggingface.co/lightx2v/Qwen-Image-2512-Lightning/resolve/a52649c9d0f6e1a248bff13f0df33bb8a2abdb52/Qwen-Image-2512-Lightning-4steps-V1.0-bf16.safetensors",
+     "role": "lora"
+    }
+   ],
+   "roles": {
+    "unet": "diffusion_models/qwen_image_2512_fp8_e4m3fn.safetensors",
+    "clip": "text_encoders/qwen_2.5_vl_7b_fp8_scaled.safetensors",
+    "vae": "vae/qwen_image_vae.safetensors",
+    "lora": "loras/Qwen-Image-2512-Lightning-4steps-V1.0-bf16.safetensors"
+   },
+   "downloadBytes": 30918764366
+  }
+ ]
+}

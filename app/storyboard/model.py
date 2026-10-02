@@ -128,6 +128,26 @@ class Storyboard:
         temporary.replace(target)
         return target
 
+    def save_as(self, parent, title):
+        """A copy of this project under another title (its own folder and id): the document and the
+        assets, not the backups or the exports. Returns the copy; this project is left as it is."""
+        title = (title or '').strip()
+        if not title:
+            raise StoryboardError('The copy needs a title.')
+        folder = Path(parent) / (_safe_name(title) + SUFFIX)
+        if folder.exists():
+            raise StoryboardError(f'{folder} already exists.')
+        folder.mkdir(parents=True)
+        if (self.folder / 'assets').is_dir():
+            shutil.copytree(self.folder / 'assets', folder / 'assets')
+        else:
+            (folder / 'assets').mkdir()
+        document = copy.deepcopy(self.doc)
+        document.update(id=new_id('story'), title=title, createdAt=now())
+        copy_ = Storyboard(folder, document)
+        copy_.save()
+        return copy_
+
     def snapshot(self):
         return copy.deepcopy(self.doc)
 

@@ -93,7 +93,8 @@ class DepthControlTests(unittest.TestCase):
         self.assertFalse(any('control' in s['params'] for s in off['steps']))
 
         film_dir = self.tmp / 'film'
-        exported = h3film.export_film(self.board, film_dir, {'shortEdge': 384, 'controlSource': 'depth'})
+        exported = h3film.export_film(self.board, film_dir, {'shortEdge': 384, 'controlSource': 'depth',
+                                                                 'grouping': 'panel', 'overlapOnCuts': True})
         film = json.loads((film_dir / 'film.json').read_text(encoding='utf-8'))
         windows = film['timeline']['segmentConfig']['segments']
         first, second = windows[0]['cytoolsControl'], windows[1]['cytoolsControl']

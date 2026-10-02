@@ -13,12 +13,18 @@ Storyboard editor built on CyToolsCore 0.9.0 (scaffolded with `cytools new --des
 | `storyboard/depthcontrol.py` | Control videos of 3D panels along their camera move for Fun ControlNet, used by both exports: depth (fixed range, fidelity blur), pose, auto, overlay |
 | `storyboard/pose.py` | Character skeleton (OpenPose COCO-18) posed by angles (lean, twist, side bend, pelvis tilt, hands: five finger curls, a spread and the wrist bend (towards the palm, towards the thumb), feet: pitch and toes (flat on the ground at 0, heading from the shin; `skeleton(..., feet=True)` / `world_feet`: ankle, heel, ball, toe tips, big and small toe; drawn in the OpenPose control as BODY_25 feet, option `poseFeet`; the lowest sole point stands on the ground), with an OpenPose 21-point hand per side from `skeleton(..., hands=True)` / `world_hands`, head turn/tilt, 4 per limb: forwards, sideways, bend, turn about itself — 3-angle poses still load, seat), presets and project poses (`doc['poses']`, joint by joint, bounded), walking cycle from the distance covered, end pose, two-bone IK (`reach`: wrist/ankle to a world point, exact within the limits), `swivel` (elbow/knee turned about the root-end line, hand or foot kept), `look` (head towards a point), `lean_to` (shoulder: upper body lean/twist/side bend; neck: lean/side bend), `curl` (fingertip: that finger's curl), `bend_wrist` (palm handle at the knuckles), `bend_toes` (toe tips), `tilt_pelvis` (hip: pelvis tilted about the other hip, legs re-planted, upper body kept), `shift_pelvis` (pelvis handle between the hips, `handle_point`: pelvis moved over planted feet, returns the position shift); the layout editor exposes them all as handles in the 3D view, OpenPose drawing; the 3D mannequin is built on it (`render3d._posed_mannequin`) |
 | `storyboard/h3workflow.py`, `gui/workflow_export.py` | Conversion into a CyTools_MiniMaxH3 workflow (`cytools.minimax_h3.workflow/1`): one generate step per panel (4-15 s, long panels split into chained parts, trims to the exact duration, frame extraction for chaining), first/last frames, keyframe guides, references, H3 structured prompts, final concat with per-seam transitions; window with the live shot table |
-| `tool.py` | 37 operations (storyboard, panels, sequences, library, stages, objects, panel layouts, renders, camera move, exports) |
+| `storyboard/imagegen.py` | Picture plans: recipes `character`, `location` (empty or with a character), `panel` (layout render + character + place), `free`; views, sizes (megapixels, formats, multiples of 32), seeds, every sentence an option (`settings.imagegen`); `keep` imports a picture with its recipe (`doc['generations']`) and attaches it (library item files, first image of the panel) |
+| `storyboard/comfy_image_workflow.py` | The ComfyUI graph of a plan for three families (`qwen21`: TextEncodeQwenImage21 + QwenImage21Cache; `qwen_edit_plus`: TextEncodeQwenImageEditPlus + ModelSamplingAuraFlow + CFGNorm + Lightning LoRA; `qwen_t2i`), as an editor workflow and as the API prompt derived from it; `export` writes both with the reference pictures |
+| `storyboard/imageengine.py`, `workers/image_worker.py`, `storyboard/workerhost.py`, `workers/_protocol.py` | The image engine: a persistent JSON-lines worker (engine interpreter) that owns a private ComfyUI (127.0.0.1, no custom or API node, models through extra_model_paths), uploads references, posts one API prompt per picture, follows the websocket, interrupts on cancellation (model kept), or talks to another ComfyUI (`server` option) |
+| `storyboard/engines.py`, `setup_engine.py`, `engines.json`, `requirements-engine-image.txt` | Engine environment `runtime/engines/image` (torch 2.14.0+cu130 pinned by constraints) and the ComfyUI checkout `runtime/sources/ComfyUI` at a pinned revision, import check, receipt |
+| `storyboard/imagemodels.py`, `models/catalog.json`, `scripts/build_image_catalog.py` | Model catalogue (URLs pinned to a commit, sizes, SHA-256 read from the Hugging Face API), resumable install through the SDK DownloadManager, verify, remove (files shared by two models kept) |
+| `storyboard/imageops.py`, `gui/images_tab.py`, `gui/jobs.py` | The ten image operations and the Images tab (recipes, views, results to keep, engine and model installation) |
+| `tool.py` | 47 operations (storyboard, panels, sequences, library, stages, objects, panel layouts, renders, camera move, exports, pictures, image engine and models) |
 | `build_manifest.py` | Writes `CyTool.json` |
 | `gui/main.py` | Dear ImGui editor: library, board with drag and drop, inspector, timeline with duration handles, animatic player, undo/redo, autosave, reload of external edits |
 | `gui/layout_editor.py` | Layout tab: 3D viewport rendered on a worker thread (own GL context, latest request wins), ImGuizmo gizmo, picking, orbit/pan/zoom of the view or of a shot camera, 2D canvas; auto-render of panel pictures |
 | `gui/updates.py`, `maintenance.py` | GitHub application updates (staged, verified, rollback) |
-| `locales/add_storyboard_fr.py`, `locales/add_layout_fr.py`, `locales/add_film_fr.py`, `locales/add_workflow_fr.py` | French strings for `ui.json` |
+| `locales/add_storyboard_fr.py`, `locales/add_layout_fr.py`, `locales/add_film_fr.py`, `locales/add_workflow_fr.py`, `locales/add_images_fr.py` | French strings for `ui.json` |
 | `tests/` | model, operations and exports, editor logic, updates; `make_sample.py` builds a demo project |
 
 ## Install
@@ -43,6 +49,17 @@ cd app
     [--ui-test-tab=Layout --ui-test-layout=panel:2,select:Lea,pilot:1]
 ..\runtime\python\Scripts\cytools.exe validate CyTool.json
 ```
+
+Executed on 30/09/2026 for picture generation (Windows 10, RTX 3090, driver 610.47): the 79 tests
+(`tests/test_imagegen.py` runs the operations through the real runtime and a real worker process
+that stands in for the model); `install_image_engine` through the CLI (torch 2.14.0+cu130, CUDA
+available, ComfyUI at 73c9bad); the real worker starting the private ComfyUI (8 s, int8 CUDA
+kernels found) and answering MissingModel with no weights; the API prompts of the three model
+families accepted by a real ComfyUI 0.37.0 (references uploaded, run stopped at the first weight
+file, zero-byte placeholders); the five exported editor workflows loaded in the real ComfyUI page,
+whose own graphToPrompt equals our API prompt (0 differences); `install_image_model` with an
+interrupted then resumed download; the Images tab in French with generated stand-in pictures.
+Not executed: any picture by a real model, the 2511 and 2512 models, a remote ComfyUI with models.
 
 Executed on 27/09/2026 (Windows 10): the 42 tests; the Layout tab (3D free view, object
 selected with its gizmo, view through the shot camera, 2D canvas) in English and French;

@@ -69,7 +69,8 @@ async def main():
             move = await run_job(session, 'suggest_camera_move', {'project': project, 'panel': panel, 'apply': True})
             await run_job(session, 'add_panel', {'project': project, 'title': 'Second', 'duration': 4,
                                                  'prompt': {'action': 'Tom walks to the wall.'}})
-            film = await run_job(session, 'export_h3_film', {'project': project, 'options': {'overlapFrames': 22}})
+            film = await run_job(session, 'export_h3_film', {'project': project, 'options': {
+                'overlapFrames': 22, 'grouping': 'panel', 'overlapOnCuts': True}})
             converted = await run_job(session, 'export_h3_workflow', {'project': project, 'options': {
                 'chain': 'always', 'controlSource': 'pose'}})
     report = {'tools': len(tools), 'layoutTools': sorted(t for t in tools if t.endswith(('stage', 'object', 'layout', 'move'))),

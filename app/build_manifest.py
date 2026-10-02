@@ -8,7 +8,7 @@ from pathlib import Path
 
 APP = Path(__file__).resolve().parent
 sys.path.insert(0, str(APP))
-from storyboard import h3film, h3workflow, model  # noqa: E402
+from storyboard import h3film, h3workflow, imagegen, imagemodels, model  # noqa: E402
 from storyboard.pose import NAMES as POSES  # noqa: E402
 
 VERSION = '0.1.0'
@@ -85,6 +85,16 @@ FILM_OPTIONS = {'type': 'object', 'additionalProperties': False, 'properties': {
                   'description': 'Short edge of the canvas; the other side follows the storyboard aspect (multiples of 32).'},
     'width': {'type': 'integer', 'minimum': 0, 'maximum': 2560, 'description': 'Explicit width (with height); 0 = from shortEdge.'},
     'height': {'type': 'integer', 'minimum': 0, 'maximum': 2560},
+    'grouping': {'type': 'string', 'enum': list(h3film.GROUPINGS),
+                 'description': 'panel: one segment per panel; sequence (default): consecutive panels of a sequence '
+                                'share segments of about maxSegmentSeconds, H3 cutting between their shots; film: '
+                                'the same across sequences.'},
+    'maxSegmentSeconds': {'type': 'number', 'minimum': 2, 'maximum': 149, 'description': 'Longest grouped segment.'},
+    'maxShotsPerSegment': {'type': 'integer', 'minimum': 0, 'description': 'Most shots in a grouped segment; 0 = no limit.'},
+    'shotText': {'type': 'string', 'maxLength': 2000, 'description': 'Shot header in a grouped segment; {shot}, {start}, {end}, {title}.'},
+    'dialogueText': {'type': 'string', 'maxLength': 2000, 'description': 'A line; {name}, {how} (" (off screen)"), {line}.'},
+    'soundText': {'type': 'string', 'maxLength': 2000, 'description': "A shot's sound; {text}. Empty leaves it out."},
+    'musicText': {'type': 'string', 'maxLength': 2000, 'description': "A shot's music; {text}. Empty leaves it out."},
     'overlapFrames': {'type': 'integer', 'enum': list(h3film.OVERLAPS),
                       'description': 'Frames each segment re-generates from the previous one (continuity); removed at assembly.'},
     'overlapOnCuts': {'type': 'boolean', 'description': 'Also carry continuity across plain cuts (same scene).'},
@@ -96,6 +106,9 @@ FILM_OPTIONS = {'type': 'object', 'additionalProperties': False, 'properties': {
     'identityScope': {'type': 'string', 'enum': ['panel', 'film'],
                       'description': 'Identity pictures of the characters a panel uses, or of every character in every segment.'},
     'identityText': {'type': 'string', 'maxLength': 2000, 'description': '{n}, {name}, {description}'},
+    'identityPictures': {'type': 'integer', 'minimum': 1, 'maximum': 6,
+                         'description': 'Pictures of each character sent per segment (the first ones of the item).'},
+    'identityMoreText': {'type': 'string', 'maxLength': 2000, 'description': 'Sentence of the 2nd, 3rd... picture of a character.'},
     'shotPictures': {'type': 'string', 'enum': ['main', 'all', 'none'],
                      'description': "The panel's own pictures: the main one (layout render first), all, or none."},
     'layoutText': {'type': 'string', 'maxLength': 2000}, 'sketchText': {'type': 'string', 'maxLength': 2000},
@@ -220,6 +233,135 @@ FILM_SUMMARY = {'type': 'object', 'properties': {
 LIGHT = {'ramBytes': 256 * 1024 ** 2, 'diskBytes': 512 * 1024 ** 2}
 
 
+VIEW = {'type': 'object', 'additionalProperties': False, 'required': ['key', 'text'], 'properties': {
+    'key': {'type': 'string', 'minLength': 1, 'maxLength': 60}, 'text': {'type': 'string', 'maxLength': 2000},
+    'on': {'type': 'boolean'}, 'format': {'type': 'string', 'enum': list(imagegen.FORMATS)}}}
+IMAGE_OPTIONS = {'type': 'object', 'additionalProperties': False, 'properties': {
+    'model': {'type': 'string', 'maxLength': 80, 'description': 'Image model for pictures from references ("" = the '
+              'default installed one). See image_engine_status.'},
+    'textModel': {'type': 'string', 'maxLength': 80, 'description': 'Image model for pictures from a text alone.'},
+    'steps': {'type': 'integer', 'minimum': 0, 'maximum': 100, 'description': '0 = the model default.'},
+    'guidance': {'type': 'number', 'minimum': 0, 'maximum': 20, 'description': '0 = the model default.'},
+    'fast': {'type': 'boolean', 'description': 'Few-step LoRA when the model has one.'},
+    'megapixels': {'type': 'number', 'minimum': 0.25, 'maximum': 4},
+    'count': {'type': 'integer', 'minimum': 1, 'maximum': 16, 'description': 'Pictures per view.'},
+    'seed': {'type': 'integer', 'minimum': 0, 'maximum': 2147483647},
+    'randomSeed': {'type': 'boolean', 'description': 'false: `seed`, seed + 1... are used, for reproducible pictures.'},
+    'negative': {'type': 'string', 'maxLength': 4000}, 'includeStyle': {'type': 'boolean'},
+    'loras': {'type': 'array', 'maxItems': imagegen.MAX_LORAS, 'description': 'LoRA files applied to the model, in order; '
+              'names inside data/models/comfyui/loras (see image_engine_status). A LoRA belongs to one model family.',
+              'items': {'type': 'object', 'additionalProperties': False, 'required': ['file'], 'properties': {
+                  'file': {'type': 'string', 'minLength': 1, 'maxLength': 255},
+                  'strength': {'type': 'number', 'minimum': -4, 'maximum': 4, 'default': 1.0},
+                  'on': {'type': 'boolean', 'default': True}}}},
+    'keepLoadedMinutes': {'type': 'integer', 'minimum': 0, 'maximum': 1440,
+                          'description': 'The model stays in memory this long after the last picture; 0 = until unloaded.'},
+    'server': {'type': 'string', 'maxLength': 500, 'description': 'Address of another ComfyUI to render on (Colab tunnel); '
+               '"" = the private engine of the application.'},
+    'characterViews': {'type': 'array', 'maxItems': 40, 'items': VIEW},
+    'locationViews': {'type': 'array', 'maxItems': 40, 'items': VIEW},
+    **{key: {'type': 'string', 'maxLength': 4000} for key in imagegen.TEXTS},
+    'panelFormat': {'type': 'string', 'enum': list(imagegen.FORMATS)},
+    'panelGuide': {'type': 'string', 'enum': list(imagegen.GUIDES),
+                   'description': 'How a 3D-staged shot gets its framing: control (depth or pose of the staging through '
+                                  'the ControlNet of the model), layout (the staging render as a picture), both, none; '
+                                  'auto = control when the ControlNet is installed, else layout.'},
+    'panelControlSource': {'type': 'string', 'enum': list(imagegen.CONTROL_SOURCES)},
+    'panelControlStrength': {'type': 'number', 'exclusiveMinimum': 0, 'maximum': 2},
+    'panelControlEnd': {'type': 'number', 'exclusiveMinimum': 0, 'maximum': 1,
+                        'description': 'Share of the steps during which the control applies.'},
+    'panelControlBlur': {'type': 'string', 'enum': ['none', 'medium', 'strong']},
+    'panelCharacterPictures': {'type': 'integer', 'minimum': 1, 'maximum': 6,
+                               'description': 'Pictures of each character sent for a shot or a place: its first picture, '
+                                              'then its generated views (full body first).'},
+    'freeFormat': {'type': 'string', 'enum': list(imagegen.FORMATS)}}}
+IMAGE_PLAN = {
+    'project': dict(PROJECT, description='Project (needed by every recipe except free).'),
+    'recipe': {'type': 'string', 'enum': list(imagegen.RECIPES), 'default': 'free',
+               'description': 'character: views of a library character; location: views of a place, empty or with a '
+                              'character; panel: the picture of a shot; free: any prompt.'},
+    'item': {'type': 'string', 'maxLength': 80, 'description': 'Library item id (character or location recipe).'},
+    'panel': {'type': 'string', 'maxLength': 80, 'description': 'Panel id (panel recipe).'},
+    'views': {'type': 'array', 'maxItems': 40, 'items': {'type': 'string', 'maxLength': 60},
+              'description': 'View keys to render; default: the views switched on in the options.'},
+    'character': {'type': 'string', 'maxLength': 80, 'description': 'Character id placed in the location (location recipe).'},
+    'prompt': {'type': 'string', 'maxLength': 8000, 'description': 'Text of the free recipe.'},
+    'references': {'type': 'array', 'maxItems': 16, 'items': {'type': 'string', 'maxLength': 4096},
+                   'description': 'Free recipe: picture files or library item ids used as references (none = from the text).'},
+    'format': {'type': 'string', 'enum': list(imagegen.FORMATS)},
+    'extra': {'type': 'string', 'maxLength': 2000, 'description': 'Added to every prompt of the recipe.'},
+    'extras': {'type': 'string', 'maxLength': 80, 'description': 'Panel recipe: character id that every mannequin of the '
+               'staging without a reference stands for (a crowd of the same character).'},
+    'label': {'type': 'string', 'maxLength': 120}, 'options': IMAGE_OPTIONS}
+ANY = {'type': 'object', 'additionalProperties': True}
+IMAGE_MODEL = {'type': 'string', 'enum': sorted(imagemodels.catalog())}
+# No VRAM reservation: the engine keeps its model loaded between jobs (a reservation would refuse the
+# second job for lack of free VRAM), ComfyUI offloads what does not fit, and with the `server` option
+# nothing runs on this machine. What each model needs is declared on the backend's models.
+HEAVY = {'ramBytes': 8 * 1024 ** 3, 'cpuThreads': 2}
+NETWORK = {'ramBytes': 1024 ** 3, 'cpuThreads': 2, 'diskBytes': 40 * 1024 ** 3}
+
+
+def image_operations():
+    def op(op_id, name, description, inputs, required=(), resources=None, permissions=(), backends=(), progress=True):
+        entry = operation(op_id, name, description, inputs, ANY, required=required, progress=progress)
+        entry.update(resourceRequirements=resources or LIGHT, permissions=list(permissions), supportedBackends=list(backends))
+        return entry
+    return [
+        op('plan_images', 'Plan pictures', 'The requests a recipe would send to the image model (prompts, reference '
+           'pictures, sizes, seeds), without generating anything.', IMAGE_PLAN, progress=False),
+        op('generate_images', 'Generate pictures', 'Generate reference pictures in the application: views of a character '
+           'or a place from its reference pictures (or from its description), a character placed in a place, the picture '
+           'of a shot from its staging render, or a free prompt. The model stays loaded between calls. Returns the '
+           'pictures with their recipe; keep=true copies them into the project and attaches them (library item files, '
+           'first image of the panel).',
+           dict(IMAGE_PLAN, keep={'type': 'boolean', 'default': False, 'description': 'Copy every picture into the project.'},
+                attach={'type': 'boolean', 'default': True, 'description': 'With keep: attach to the item or the panel.'},
+                save_options={'type': 'boolean', 'default': False, 'description': 'Remember the options in the project.'}),
+           resources=HEAVY, backends=['comfyui']),
+        op('keep_generated_image', 'Keep a generated picture', 'Copy one picture returned by generate_images into the '
+           'project with its recipe, and attach it to its target.',
+           {'project': PROJECT, 'file': {'type': 'string', 'x-cy-kind': 'File', 'maxLength': 4096},
+            'attach': {'type': 'boolean', 'default': True}}, required=['project', 'file'], progress=False),
+        op('export_image_workflows', 'Export ComfyUI picture workflows', 'Write the ComfyUI workflow of a recipe (editor '
+           'file to drop on the ComfyUI page, API prompt) and its reference pictures (folder cytools_images, to copy '
+           'into ComfyUI/input): the same graph the application renders.',
+           dict(IMAGE_PLAN, folder={'type': 'string', 'x-cy-kind': 'Directory', 'maxLength': 4096,
+                                    'description': 'Target folder; default exports/comfyui_images in the project.'},
+                name={'type': 'string', 'maxLength': 60}), progress=False),
+        op('image_engine_status', 'Image engine status', 'Engine environment, models (installed, size, licence) and the '
+           'model currently in memory.', {}, progress=False),
+        op('unload_image_model', 'Unload the image model', 'Stop the image engine and give its memory back.', {},
+           progress=False),
+        op('install_image_engine', 'Install the image engine', 'Create or repair the private engine: a Python '
+           'environment with PyTorch (CUDA 13) and a pinned ComfyUI checkout, checked by import.',
+           {'cpu_only': {'type': 'boolean', 'default': False}}, resources=NETWORK, permissions=['network']),
+        op('install_image_model', 'Install an image model', 'Download the files of a model (resumable, size and SHA-256 '
+           'checked); files shared with another model are not downloaded twice.',
+           {'model': IMAGE_MODEL, 'accept_license': {'type': 'boolean', 'default': True},
+            'repair': {'type': 'boolean', 'default': False}}, required=['model'], resources=NETWORK, permissions=['network']),
+        op('verify_image_model', 'Verify an image model', 'Check every file of a model against its declared SHA-256.',
+           {'model': IMAGE_MODEL}, required=['model']),
+        op('remove_image_model', 'Remove an image model', 'Delete the files of a model that no other installed model uses.',
+           {'model': IMAGE_MODEL}, required=['model'], progress=False),
+    ]
+
+
+def image_backend():
+    models = []
+    for entry in imagemodels.catalog().values():
+        models.append({'id': entry['id'], 'name': entry['name'], 'version': entry['source']['revision'][:12],
+                       'source': entry['source']['url'], 'license': entry['license']['name'],
+                       'licenseUrl': entry['license']['url'], 'location': 'Local', 'runsLocally': True,
+                       'installed': False, 'downloadSize': entry['downloadBytes'], 'installedSize': entry['downloadBytes'],
+                       'resourceRequirements': {'ramBytes': entry['resources']['ramBytes'],
+                                                'vramBytes': {'auto': entry['resources']['vramBytes']}}})
+    return {'id': 'comfyui', 'name': 'Private ComfyUI image engine (Qwen-Image)', 'version': '0.38.0',
+            'license': 'GPL-3.0 (ComfyUI); each model has its own licence', 'licenseUrl': 'https://github.com/comfyanonymous/ComfyUI',
+            'shareableModelInstance': False, 'threadSafe': False, 'concurrentInference': False, 'maxConcurrentInference': 1,
+            'gpu': {'required': True}, 'cpu': {'supported': False}, 'models': models}
+
+
 def operation(op_id, name, description, inputs, outputs=None, required=('project',), progress=False):
     return {'id': op_id, 'name': name, 'description': description,
             'inputSchema': {'type': 'object', 'properties': inputs, 'required': list(required),
@@ -238,6 +380,12 @@ def manifest():
                    'fps': {'type': 'integer', 'minimum': 1, 'maximum': 120, 'default': 24},
                    'default_duration': {'type': 'number', 'minimum': 0.1, 'maximum': 600, 'default': 5}},
                   required=['title']),
+        operation('duplicate_storyboard', 'Save a storyboard as a copy', 'Copy a project under another title (document '
+                  'and assets, its own folder and id); the original is left as it is.',
+                  {'project': PROJECT, 'title': {'type': 'string', 'minLength': 1, 'maxLength': 120},
+                   'folder': {'type': 'string', 'x-cy-kind': 'Directory', 'maxLength': 4096,
+                              'description': 'Parent folder of the copy; default: next to the original.'}},
+                  required=['project', 'title']),
         operation('list_storyboards', 'List storyboards', 'Projects in data/projects (or in a given folder).',
                   {'folder': {'type': 'string', 'x-cy-kind': 'Directory', 'maxLength': 4096}},
                   {'type': 'object', 'properties': {'projects': {'type': 'array'}}, 'required': ['projects']}, required=[]),
@@ -376,8 +524,9 @@ def manifest():
                                                     'cameraSpeed': {'type': 'string'}}, 'required': ['cameraMove']},
                   required=['project', 'panel']),
         operation('export_h3_film', 'Export a MiniMax H3 film', 'Turn the storyboard into a multi-segment MiniMax H3 '
-                  'film: film.json (a Timeline Director timeline: one window per panel with overlap frames for '
-                  'continuity, identity/location/shot pictures and prompts per segment), its pictures, and two '
+                  'film: film.json (a Timeline Director timeline: by default the panels of a sequence grouped into '
+                  'windows of about 20 s whose prompt describes the shots in order, overlap frames where the picture '
+                  'continues, identity/location/shot pictures per window), its pictures, and two '
                   'ComfyUI workflows (CyTools H3 Film disk sampler, Timeline Director). The same file runs in '
                   'CyTools_MiniMaxH3 on Colab.',
                   {'project': PROJECT, 'folder': {'type': 'string', 'x-cy-kind': 'Directory', 'maxLength': 4096,
@@ -402,18 +551,19 @@ def manifest():
         operation('preview_h3_film', 'Preview a MiniMax H3 film', 'Segments, frame windows, pictures and prompts the '
                   'export would produce, without writing anything.',
                   {'project': PROJECT, 'options': FILM_OPTIONS}, FILM_SUMMARY),
-    ]
+    ] + image_operations()
     return {
         'schemaVersion': 1, 'protocolVersion': '1.0', 'id': 'cy.tool.storyboard', 'name': 'CyTools_Storyboard',
         'version': VERSION,
         'description': 'Storyboards for generated films: timed panels with images, structured prompts, dialogue, '
                        'camera, sound and a reference library; panels staged on shared 3D sets of simple shapes or drawn in 2D; '
                        'contact sheet, script and animatic exports; MiniMax H3 film and workflow exports with '
-                       'depth or pose control videos.',
+                       'depth or pose control videos; reference pictures generated in the application (characters, '
+                       'places, shots) with Qwen-Image on a private ComfyUI engine, or exported as ComfyUI workflows.',
         'vendor': 'Cyberalien', 'author': 'Cyberalien', 'executable': 'runtime/python/Scripts/python.exe app/tool.py',
         'license': 'GPL-3.0-only (Tool code, see LICENSE).',
         'categories': ['video', 'planning'], 'tags': ['storyboard', 'animatic', 'shot list', 'prompt', 'previs', 'layout'],
-        'capabilities': ['jobs', 'cancellation', 'progress'], 'backends': [],
+        'capabilities': ['jobs', 'cancellation', 'progress'], 'backends': [image_backend()],
         'platforms': [{'os': 'Windows', 'architecture': 'x64', 'status': 'Experimental', 'computeBackends': ['CPU']},
                       {'os': 'Linux', 'architecture': 'x64', 'status': 'Experimental', 'computeBackends': ['CPU'],
                        'notes': 'Launcher script provided, not executed on Linux.'}],

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "python": ">=3.11,<3.13",
+  "engines": {
+    "image": {
+      "label": "Image engine (private ComfyUI, PyTorch CUDA 13)",
+      "directory": "runtime/engines/image",
+      "torch": {
+        "packages": ["torch==2.14.0+cu130", "torchvision==0.29.0+cu130", "torchaudio==2.11.0+cu130"],
+        "index": "https://download.pytorch.org/whl/cu130",
+        "cpu": {
+          "packages": ["torch==2.14.0", "torchvision==0.29.0", "torchaudio==2.11.0"],
+          "index": "https://download.pytorch.org/whl/cpu"
+        }
+      },
+      "requirements": "requirements-engine-image.txt",
+      "sources": {
+        "ComfyUI": {
+          "repository": "https://github.com/comfyanonymous/ComfyUI.git",
+          "revision": "6b747c0428c343e1417219641db93a4fb7cb69ae",
+          "version": "v0.38.0",
+          "license": "GPL-3.0",
+          "requiredFile": "main.py",
+          "requirements": "requirements.txt"
+        }
+      },
+      "verify": ["torch", "torchvision", "transformers", "safetensors", "aiohttp", "av", "comfy_kitchen", "comfy_aimdo", "psutil"],
+      "backends": ["comfyui"],
+      "estimatedBytes": 5000000000
+    }
+  }
+}

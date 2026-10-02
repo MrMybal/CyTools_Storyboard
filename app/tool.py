@@ -61,6 +61,14 @@ def create_storyboard(context, p):
     return _describe(board)
 
 
+def duplicate_storyboard(context, p):
+    board = _open(p)
+    try:
+        return _describe(board.save_as(p.get('folder') or board.folder.parent, p['title']))
+    except model.StoryboardError as exc:
+        raise CyToolError('InvalidParameters', str(exc)) from None
+
+
 def list_storyboards(context, p):
     folder = Path(p.get('folder') or PROJECTS)
     projects = []
@@ -318,7 +326,7 @@ def preview_h3_workflow(context, p):
 
 
 HANDLERS = {name: globals()[name] for name in (
-    'create_storyboard', 'list_storyboards', 'describe_storyboard', 'update_storyboard', 'add_panel', 'update_panel',
+    'create_storyboard', 'duplicate_storyboard', 'list_storyboards', 'describe_storyboard', 'update_storyboard', 'add_panel', 'update_panel',
     'duplicate_panel', 'move_panel', 'remove_panel', 'add_sequence', 'update_sequence', 'remove_sequence',
     'add_library_item', 'update_library_item', 'remove_library_item', 'validate_storyboard', 'export_contact_sheet',
     'export_summary', 'export_animatic', 'add_stage', 'update_stage', 'remove_stage', 'add_object', 'update_object',
@@ -333,6 +341,8 @@ def create_runtime(data_dir, **options):
         runtime.register(name, handler)
     from cytools_core.shared_installation import register_operations
     register_operations(runtime, ROOT)
+    from storyboard import imageops
+    imageops.register(runtime, _open)
     return runtime
 
 

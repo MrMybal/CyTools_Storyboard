@@ -25,8 +25,14 @@ workflow for CyTools_MiniMaxH3.
   head, neck, pelvis, hips, knees, feet and toes (inverse kinematics, joint limits).
 - **Exports**: contact sheet (PNG), script (HTML or Markdown), animatic (MP4 with captions; 3D
   panels play their camera and character moves).
-- **MiniMax H3 film**: one H3 segment per panel on the 5 + 17n frame grid, overlapping segments
-  across cuts, pictures, reference videos and sounds per segment, editable prompt sentences,
+- **Reference pictures generated in the application** (Images tab): views of a character or a
+  place from its reference pictures (or from its description), a character placed in a place, the
+  picture of a shot from its staging render, or a free prompt. Rendered by **Qwen-Image** on a
+  private ComfyUI engine that keeps the model loaded between pictures; every picture kept in the
+  project carries its recipe. The same graphs are exported as ComfyUI workflows.
+- **MiniMax H3 film**: the panels of a sequence grouped into H3 segments of about 20 s (or one
+  segment per panel) on the 5 + 17n frame grid, overlap where the picture continues, pictures,
+  reference videos and sounds per segment, editable prompt sentences,
   optional depth or OpenPose control videos (with hands and feet) rendered from the 3D staging,
   and a ComfyUI workflow written next to the film.
 - **MiniMax H3 workflow**: the storyboard as a CyTools_MiniMaxH3 workflow (one generation per
@@ -36,7 +42,10 @@ workflow for CyTools_MiniMaxH3.
 
 - Windows 10/11 x64 (the Linux launcher is provided but has not been run on Linux).
 - Python 3.11 and `git` on the PATH to build the private environment.
-- An OpenGL 3.3 capable GPU or driver for the 3D view and renders (no AI model runs here).
+- An OpenGL 3.3 capable GPU or driver for the 3D view and renders.
+- Optional, for the Images tab: an NVIDIA GPU (24 GB of VRAM for the models as shipped) with a
+  driver supporting CUDA 13, about 8 GB of disk for the image engine and 17 to 31 GB per model.
+  Without it, the same pictures can be rendered on another ComfyUI (its address in the tab).
 
 ## Installation
 
@@ -50,6 +59,30 @@ powershell -File app\build_launcher.ps1
 ```
 
 Then double-click `CyTools_Storyboard.exe`.
+
+## Image engine and models
+
+Nothing heavy ships with the application. From the Images tab (Installation), or from the
+command line:
+
+```
+runtime\python\Scripts\python.exe app\setup_engine.py image
+runtime\python\Scripts\python.exe app\tool.py invoke install_image_model --params "{\"model\":\"qwen-image-2.1-int8\"}"
+```
+
+(the second command needs a client with the `network` permission: `tool.py create-client --name me
+--permission network`, then `CYTOOLS_TOKEN`). The engine is a private Python environment with
+PyTorch (CUDA 13) in `runtime/engines/image` and a pinned ComfyUI checkout in
+`runtime/sources/ComfyUI`; models go to `data/models/comfyui/`.
+
+| Model | Use | Download | Licence |
+| --- | --- | --- | --- |
+| Qwen-Image 2.1 (int8), default | text-to-image and up to 10 reference pictures | 17.3 GB | Qwen Research License (non-commercial) |
+| Qwen-Image 2.1 ControlNet (int8) | structure guide of shots (depth or pose of the 3D staging) | 3.8 GB | Qwen Research License (non-commercial) |
+| Qwen-Image-Edit 2511 (int8) | 1 to 3 reference pictures, 4-step LoRA | 31.0 GB | Apache-2.0 |
+| Qwen-Image 2512 (fp8) | text-to-image, 4-step LoRA | 30.9 GB | Apache-2.0 |
+
+ComfyUI is GPL-3.0; it is downloaded at installation and never redistributed with this repository.
 
 ## Command line and MCP
 
@@ -67,8 +100,8 @@ declared in `app/CyTool.json` and reachable through the CLI and MCP transports o
 | --- | --- |
 | `CyTools_Storyboard.exe`, `CyTools_Storyboard.sh` | launchers (the exe is built by `app/build_launcher.ps1`) |
 | `app/` | code, manifest, interface, locales, tests and scripts |
-| `data/` | projects, settings, logs and reports — created locally, never committed |
-| `runtime/` | the private Python environment — created locally, never committed |
+| `data/` | projects, settings, logs, reports and model weights — created locally, never committed |
+| `runtime/` | the private Python environments and the ComfyUI checkout — created locally, never committed |
 
 ## Tests
 

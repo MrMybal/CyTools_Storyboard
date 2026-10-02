@@ -197,6 +197,31 @@ def write_video(board, samples, path, size, blur='none', source='depth', hands=T
     return path
 
 
+def write_picture(board, panel, path, size, source='depth', blur='none', t=0.0, hands=True, feet=True):
+    """One control picture of a 3D panel at t of its move, as a PNG: depth (grey, near is white),
+    pose (OpenPose skeletons on black) or overlay (skeletons over the depth)."""
+    from PIL import Image
+    if staged(board, panel) is None:
+        raise StoryboardError(f'Panel "{panel["title"]}" is not staged in 3D: it has no depth or pose.')
+    if source not in ('depth', 'pose', 'overlay'):
+        raise StoryboardError(f'Unknown control source {source!r}.')
+    size = (int(size[0]), int(size[1]))
+    if source == 'pose':
+        frame = _pose(board, panel, t, size, hands, feet)
+    else:
+        depth = _depth(board, panel, t, size)
+        near, far = _range([depth])
+        frame = np.repeat(_grey(depth, near, far, blur)[..., None], 3, axis=2)
+        if source == 'overlay':
+            skeleton = _pose(board, panel, t, size, hands, feet)
+            drawn = skeleton.any(axis=2)
+            frame[drawn] = skeleton[drawn]
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    Image.fromarray(np.ascontiguousarray(frame)).save(path)
+    return path
+
+
 def panel_samples(panel, frames, start_seconds=0.0):
     """Frames of a panel's move: frame f is at (start + f / 24) seconds of the panel."""
     duration = max(float(panel['duration']), 1 / FPS)

@@ -6369,7 +6369,7 @@
  },
  "none": {
   "en": "none",
-  "fr": "aucun"
+  "fr": "aucune"
  },
  "aucune": {
   "en": "none",
@@ -10030,5 +10030,549 @@
  "Feet in the pose": {
   "en": "Feet in the pose",
   "fr": "Pieds dans la pose"
+ },
+ "The panels of a sequence are grouped into H3 segments of about 20 s: H3 cuts between the shots of a segment itself, so characters, places and sound stay continuous. A segment may start a few frames before the previous one ends (crossfades by default). The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.": {
+  "en": "The panels of a sequence are grouped into H3 segments of about 20 s: H3 cuts between the shots of a segment itself, so characters, places and sound stay continuous. A segment may start a few frames before the previous one ends (crossfades by default). The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.",
+  "fr": "Les cases d'une séquence sont regroupées en segments H3 d'environ 20 s : H3 coupe lui-même entre les plans d'un segment, si bien que personnages, lieux et son restent continus. Un segment peut commencer quelques images avant la fin du précédent (fondus enchaînés par défaut). Le même film tourne dans CyTools_MiniMaxH3 (Colab) ou dans ComfyUI."
+ },
+ "Segments": {
+  "en": "Segments",
+  "fr": "Segments"
+ },
+ "Grouping": {
+  "en": "Grouping",
+  "fr": "Regroupement"
+ },
+ "one segment per panel": {
+  "en": "one segment per panel",
+  "fr": "un segment par case"
+ },
+ "panels of a sequence together": {
+  "en": "panels of a sequence together",
+  "fr": "les cases d'une séquence ensemble"
+ },
+ "panels of the whole film together": {
+  "en": "panels of the whole film together",
+  "fr": "les cases de tout le film ensemble"
+ },
+ "Longest segment (s)": {
+  "en": "Longest segment (s)",
+  "fr": "Segment le plus long (s)"
+ },
+ "Shots per segment (0 = any)": {
+  "en": "Shots per segment (0 = any)",
+  "fr": "Plans par segment (0 = libre)"
+ },
+ "H3 was trained on segments of up to 15 s; longer ones work but motion and faces may drift. Fewer shots per segment follow the prompt more closely.": {
+  "en": "H3 was trained on segments of up to 15 s; longer ones work but motion and faces may drift. Fewer shots per segment follow the prompt more closely.",
+  "fr": "H3 a été entraîné sur des segments de 15 s au plus ; plus longs, ils marchent mais le mouvement et les visages peuvent dériver. Moins de plans par segment suivent le prompt de plus près."
+ },
+ "Shot header in a grouped segment ({shot}, {start}, {end}, {title})": {
+  "en": "Shot header in a grouped segment ({shot}, {start}, {end}, {title})",
+  "fr": "En-tête d'un plan dans un segment regroupé ({shot}, {start}, {end}, {title})"
+ },
+ "Line of dialogue ({name}, {how}, {line})": {
+  "en": "Line of dialogue ({name}, {how}, {line})",
+  "fr": "Réplique ({name}, {how}, {line})"
+ },
+ "Sound of a shot ({text})": {
+  "en": "Sound of a shot ({text})",
+  "fr": "Son d'un plan ({text})"
+ },
+ "Music of a shot ({text})": {
+  "en": "Music of a shot ({text})",
+  "fr": "Musique d'un plan ({text})"
+ },
+ "Character": {
+  "en": "Character",
+  "fr": "Personnage"
+ },
+ "Place": {
+  "en": "Place",
+  "fr": "Lieu"
+ },
+ "Shot": {
+  "en": "Shot",
+  "fr": "Plan"
+ },
+ "Free prompt": {
+  "en": "Free prompt",
+  "fr": "Prompt libre"
+ },
+ "Generate the pictures MiniMax H3 needs, from your reference pictures or from a text. The pictures you keep go into the project: a character or a place gets new reference pictures, a shot gets its first image.": {
+  "en": "Generate the pictures MiniMax H3 needs, from your reference pictures or from a text. The pictures you keep go into the project: a character or a place gets new reference pictures, a shot gets its first image.",
+  "fr": "Génère les images dont MiniMax H3 a besoin, à partir de tes images de référence ou d'un texte. Les images que tu gardes entrent dans le projet : un personnage ou un lieu reçoit de nouvelles images de référence, un plan reçoit sa première image."
+ },
+ "These pictures are the references: the first ones of the item, as many as the model takes.": {
+  "en": "These pictures are the references: the first ones of the item, as many as the model takes.",
+  "fr": "Ces images servent de références : les premières de l'élément, autant que le modèle en accepte."
+ },
+ "No picture yet: the views are generated from the description alone.": {
+  "en": "No picture yet: the views are generated from the description alone.",
+  "fr": "Pas encore d'image : les vues sont générées à partir de la description seule."
+ },
+ "Add reference pictures...": {
+  "en": "Add reference pictures...",
+  "fr": "Ajouter des images de référence..."
+ },
+ "Reference pictures": {
+  "en": "Reference pictures",
+  "fr": "Images de référence"
+ },
+ "nobody (empty place)": {
+  "en": "nobody (empty place)",
+  "fr": "personne (lieu vide)"
+ },
+ "Character in the place": {
+  "en": "Character in the place",
+  "fr": "Personnage dans le lieu"
+ },
+ "The staging render gives the framing, the characters and the place of the shot give the look. The kept picture becomes the first image of the shot.": {
+  "en": "The staging render gives the framing, the characters and the place of the shot give the look. The kept picture becomes the first image of the shot.",
+  "fr": "Le rendu de mise en scène donne le cadrage, les personnages et le lieu du plan donnent l'apparence. L'image gardée devient la première image du plan."
+ },
+ "Reference pictures (none: from the text alone)": {
+  "en": "Reference pictures (none: from the text alone)",
+  "fr": "Images de référence (aucune : à partir du texte seul)"
+ },
+ "Add pictures...": {
+  "en": "Add pictures...",
+  "fr": "Ajouter des images..."
+ },
+ "Added to every picture": {
+  "en": "Added to every picture",
+  "fr": "Ajouté à chaque image"
+ },
+ "Pictures per view": {
+  "en": "Pictures per view",
+  "fr": "Images par vue"
+ },
+ "Fast mode (few steps)": {
+  "en": "Fast mode (few steps)",
+  "fr": "Mode rapide (peu de pas)"
+ },
+ "Steps (0 = auto)": {
+  "en": "Steps (0 = auto)",
+  "fr": "Pas (0 = auto)"
+ },
+ "Guidance (0 = auto)": {
+  "en": "Guidance (0 = auto)",
+  "fr": "Guidage (0 = auto)"
+ },
+ "Project style in the prompt": {
+  "en": "Project style in the prompt",
+  "fr": "Style du projet dans le prompt"
+ },
+ "Negative prompt": {
+  "en": "Negative prompt",
+  "fr": "Prompt négatif"
+ },
+ "Keep the model loaded (minutes, 0 = until closed)": {
+  "en": "Keep the model loaded (minutes, 0 = until closed)",
+  "fr": "Garder le modèle en mémoire (minutes, 0 = jusqu'à la fermeture)"
+ },
+ "Default sentences##img": {
+  "en": "Default sentences##img",
+  "fr": "Phrases par défaut##img"
+ },
+ "Choose what to generate.": {
+  "en": "Choose what to generate.",
+  "fr": "Choisis ce qu'il faut générer."
+ },
+ "ComfyUI workflows...": {
+  "en": "ComfyUI workflows...",
+  "fr": "Workflows ComfyUI..."
+ },
+ "ComfyUI workflows": {
+  "en": "ComfyUI workflows",
+  "fr": "Workflows ComfyUI"
+ },
+ "picture(s)": {
+  "en": "picture(s)",
+  "fr": "image(s)"
+ },
+ "Cancel##gen": {
+  "en": "Cancel##gen",
+  "fr": "Annuler##gen"
+ },
+ "What will be asked": {
+  "en": "What will be asked",
+  "fr": "Ce qui sera demandé"
+ },
+ "reference(s)": {
+  "en": "reference(s)",
+  "fr": "référence(s)"
+ },
+ "The library has none yet: add one in the Storyboard tab (References), with a description.": {
+  "en": "The library has none yet: add one in the Storyboard tab (References), with a description.",
+  "fr": "La bibliothèque n'en contient pas encore : ajoutes-en un dans l'onglet Storyboard (Références), avec une description."
+ },
+ "Views": {
+  "en": "Views",
+  "fr": "Vues"
+ },
+ "Add a view": {
+  "en": "Add a view",
+  "fr": "Ajouter une vue"
+ },
+ "Default views": {
+  "en": "Default views",
+  "fr": "Vues par défaut"
+ },
+ "Format": {
+  "en": "Format",
+  "fr": "Format"
+ },
+ "project": {
+  "en": "project",
+  "fr": "projet"
+ },
+ "Model for pictures from references": {
+  "en": "Model for pictures from references",
+  "fr": "Modèle pour les images à partir de références"
+ },
+ "Model for pictures from a text": {
+  "en": "Model for pictures from a text",
+  "fr": "Modèle pour les images à partir d'un texte"
+ },
+ "automatic (installed default)": {
+  "en": "automatic (installed default)",
+  "fr": "automatique (modèle installé par défaut)"
+ },
+ "not installed": {
+  "en": "not installed",
+  "fr": "non installé"
+ },
+ "Model in memory": {
+  "en": "Model in memory",
+  "fr": "Modèle en mémoire"
+ },
+ "Unload": {
+  "en": "Unload",
+  "fr": "Décharger"
+ },
+ "No model in memory (loaded at the first picture).": {
+  "en": "No model in memory (loaded at the first picture).",
+  "fr": "Aucun modèle en mémoire (chargé à la première image)."
+ },
+ "picture": {
+  "en": "picture",
+  "fr": "image"
+ },
+ "steps": {
+  "en": "steps",
+  "fr": "pas"
+ },
+ "The engine did not find its CUDA kernels for int8 models: pictures are slower. Repair the engine (Installation).": {
+  "en": "The engine did not find its CUDA kernels for int8 models: pictures are slower. Repair the engine (Installation).",
+  "fr": "Le moteur n'a pas trouvé ses noyaux CUDA pour les modèles int8 : les images sont plus lentes. Répare le moteur (Installation)."
+ },
+ "Installation (engine and models)": {
+  "en": "Installation (engine and models)",
+  "fr": "Installation (moteur et modèles)"
+ },
+ "Image engine": {
+  "en": "Image engine",
+  "fr": "Moteur d'images"
+ },
+ "Image engine (private ComfyUI, PyTorch CUDA 13)": {
+  "en": "Image engine (private ComfyUI, PyTorch CUDA 13)",
+  "fr": "Moteur d'images (ComfyUI privé, PyTorch CUDA 13)"
+ },
+ "A private Python environment with PyTorch under runtime/engines/image, created at its final path and checked by import before use.": {
+  "en": "A private Python environment with PyTorch under runtime/engines/image, created at its final path and checked by import before use.",
+  "fr": "Un environnement Python privé avec PyTorch sous runtime/engines/image, créé à son emplacement définitif et vérifié par import avant usage."
+ },
+ "Install or repair the engine (GPU)": {
+  "en": "Install or repair the engine (GPU)",
+  "fr": "Installer ou réparer le moteur (GPU)"
+ },
+ "Cancel##eng": {
+  "en": "Cancel##eng",
+  "fr": "Annuler##eng"
+ },
+ "Where the pictures are rendered": {
+  "en": "Where the pictures are rendered",
+  "fr": "Où les images sont calculées"
+ },
+ "Other ComfyUI (address, empty = this computer)": {
+  "en": "Other ComfyUI (address, empty = this computer)",
+  "fr": "Autre ComfyUI (adresse, vide = cet ordinateur)"
+ },
+ "Empty: the engine of this application, on this computer. An address (for example the tunnel of a Colab ComfyUI): the same pictures are rendered there; its models must be in its own folders.": {
+  "en": "Empty: the engine of this application, on this computer. An address (for example the tunnel of a Colab ComfyUI): the same pictures are rendered there; its models must be in its own folders.",
+  "fr": "Vide : le moteur de cette application, sur cet ordinateur. Une adresse (par exemple le tunnel d'un ComfyUI Colab) : les mêmes images y sont calculées ; ses modèles doivent être dans ses propres dossiers."
+ },
+ "present": {
+  "en": "present",
+  "fr": "présent"
+ },
+ "Licence": {
+  "en": "Licence",
+  "fr": "Licence"
+ },
+ "Resume": {
+  "en": "Resume",
+  "fr": "Reprendre"
+ },
+ "Official page": {
+  "en": "Official page",
+  "fr": "Page officielle"
+ },
+ "NotInstalled": {
+  "en": "NotInstalled",
+  "fr": "Non installé"
+ },
+ "Partial": {
+  "en": "Partial",
+  "fr": "Partiel"
+ },
+ "Downloading": {
+  "en": "Downloading",
+  "fr": "Téléchargement"
+ },
+ "Verifying": {
+  "en": "Verifying",
+  "fr": "Vérification"
+ },
+ "Interrupted": {
+  "en": "Interrupted",
+  "fr": "Interrompu"
+ },
+ "One model for pictures from a text and from up to 10 reference pictures.": {
+  "en": "One model for pictures from a text and from up to 10 reference pictures.",
+  "fr": "Un seul modèle pour les images à partir d'un texte et à partir de 10 images de référence au plus."
+ },
+ "Pictures from 1 to 3 reference pictures; 4 steps with its Lightning LoRA.": {
+  "en": "Pictures from 1 to 3 reference pictures; 4 steps with its Lightning LoRA.",
+  "fr": "Images à partir de 1 à 3 images de référence ; 4 pas avec son LoRA Lightning."
+ },
+ "Pictures from a text only; 4 steps with its Lightning LoRA.": {
+  "en": "Pictures from a text only; 4 steps with its Lightning LoRA.",
+  "fr": "Images à partir d'un texte seulement ; 4 pas avec son LoRA Lightning."
+ },
+ "The generated pictures appear here. Keep the ones you like: they are copied into the project with their recipe (prompt, references, seed), the others stay in the job folder.": {
+  "en": "The generated pictures appear here. Keep the ones you like: they are copied into the project with their recipe (prompt, references, seed), the others stay in the job folder.",
+  "fr": "Les images générées apparaissent ici. Garde celles qui te plaisent : elles sont copiées dans le projet avec leur recette (prompt, références, graine), les autres restent dans le dossier du travail."
+ },
+ "Keep all": {
+  "en": "Keep all",
+  "fr": "Tout garder"
+ },
+ "Clear the list": {
+  "en": "Clear the list",
+  "fr": "Vider la liste"
+ },
+ "Thumbnails": {
+  "en": "Thumbnails",
+  "fr": "Vignettes"
+ },
+ "Kept in the project": {
+  "en": "Kept in the project",
+  "fr": "Gardée dans le projet"
+ },
+ "Discard": {
+  "en": "Discard",
+  "fr": "Écarter"
+ },
+ "Again": {
+  "en": "Again",
+  "fr": "Reprendre la graine"
+ },
+ "Use this seed for the next pictures": {
+  "en": "Use this seed for the next pictures",
+  "fr": "Utiliser cette graine pour les prochaines images"
+ },
+ "Character from its pictures ({pictures}, {description}, {view}, {name})": {
+  "en": "Character from its pictures ({pictures}, {description}, {view}, {name})",
+  "fr": "Personnage à partir de ses images ({pictures}, {description}, {view}, {name})"
+ },
+ "Character from its description ({name}, {description}, {view})": {
+  "en": "Character from its description ({name}, {description}, {view})",
+  "fr": "Personnage à partir de sa description ({name}, {description}, {view})"
+ },
+ "Place from its pictures ({pictures}, {description}, {view}, {name})": {
+  "en": "Place from its pictures ({pictures}, {description}, {view}, {name})",
+  "fr": "Lieu à partir de ses images ({pictures}, {description}, {view}, {name})"
+ },
+ "Place from its description ({name}, {description}, {view})": {
+  "en": "Place from its description ({name}, {description}, {view})",
+  "fr": "Lieu à partir de sa description ({name}, {description}, {view})"
+ },
+ "Character in a place ({character}, {place}, {description}, {view})": {
+  "en": "Character in a place ({character}, {place}, {description}, {view})",
+  "fr": "Personnage dans un lieu ({character}, {place}, {description}, {view})"
+ },
+ "Shot ({framing}, {people}, {place}, {text})": {
+  "en": "Shot ({framing}, {people}, {place}, {text})",
+  "fr": "Plan ({framing}, {people}, {place}, {text})"
+ },
+ "Shot: layout picture ({picture})": {
+  "en": "Shot: layout picture ({picture})",
+  "fr": "Plan : image de mise en scène ({picture})"
+ },
+ "Shot: character picture ({picture}, {name}, {description})": {
+  "en": "Shot: character picture ({picture}, {name}, {description})",
+  "fr": "Plan : image du personnage ({picture}, {name}, {description})"
+ },
+ "Shot: place picture ({picture}, {name}, {description})": {
+  "en": "Shot: place picture ({picture}, {name}, {description})",
+  "fr": "Plan : image du lieu ({picture}, {name}, {description})"
+ },
+ "main (first image, else layout render)": {
+  "en": "main (first image, else layout render)",
+  "fr": "principale (première image, sinon rendu de mise en scène)"
+ },
+ "Pictures per character": {
+  "en": "Pictures per character",
+  "fr": "Images par personnage"
+ },
+ "Character, other pictures ({n}, {name}, {description})": {
+  "en": "Character, other pictures ({n}, {name}, {description})",
+  "fr": "Personnage, autres images ({n}, {name}, {description})"
+ },
+ "Being downloaded by another client": {
+  "en": "Being downloaded by another client",
+  "fr": "Téléchargement en cours par un autre client"
+ },
+ "what the text describes": {
+  "en": "what the text describes",
+  "fr": "ce que décrit le texte"
+ },
+ "mannequin(s) without a reference are": {
+  "en": "mannequin(s) without a reference are",
+  "fr": "mannequin(s) sans référence sont"
+ },
+ "Shot: the other mannequins are a character ({name}, {picture}, {count})": {
+  "en": "Shot: the other mannequins are a character ({name}, {picture}, {count})",
+  "fr": "Plan : les autres mannequins sont un personnage ({name}, {picture}, {count})"
+ },
+ "Shot: the other mannequins have no reference ({count})": {
+  "en": "Shot: the other mannequins have no reference ({count})",
+  "fr": "Plan : les autres mannequins sont sans référence ({count})"
+ },
+ "Framing from the 3D staging": {
+  "en": "Framing from the 3D staging",
+  "fr": "Cadrage venant de la mise en scène 3D"
+ },
+ "automatic (structure guide when its model is installed)": {
+  "en": "automatic (structure guide when its model is installed)",
+  "fr": "automatique (guide de structure si son modèle est installé)"
+ },
+ "structure guide (depth or pose, ControlNet)": {
+  "en": "structure guide (depth or pose, ControlNet)",
+  "fr": "guide de structure (profondeur ou pose, ControlNet)"
+ },
+ "staging picture": {
+  "en": "staging picture",
+  "fr": "image de mise en scène"
+ },
+ "both": {
+  "en": "both",
+  "fr": "les deux"
+ },
+ "none (text and references only)": {
+  "en": "none (text and references only)",
+  "fr": "aucun (texte et références seulement)"
+ },
+ "The ControlNet of the model is not installed (Installation): the staging picture is used instead.": {
+  "en": "The ControlNet of the model is not installed (Installation): the staging picture is used instead.",
+  "fr": "Le ControlNet du modèle n'est pas installé (Installation) : l'image de mise en scène est utilisée à la place."
+ },
+ "The ControlNet of the model is not installed (Installation).": {
+  "en": "The ControlNet of the model is not installed (Installation).",
+  "fr": "Le ControlNet du modèle n'est pas installé (Installation)."
+ },
+ "Guide": {
+  "en": "Guide",
+  "fr": "Guide"
+ },
+ "Strength##imgctl": {
+  "en": "Strength##imgctl",
+  "fr": "Force##imgctl"
+ },
+ "Until (share of the steps)##imgctl": {
+  "en": "Until (share of the steps)##imgctl",
+  "fr": "Jusqu'à (part des pas)##imgctl"
+ },
+ "Structure guide for Qwen-Image 2.1: a shot follows the depth or the pose of its 3D staging.": {
+  "en": "Structure guide for Qwen-Image 2.1: a shot follows the depth or the pose of its 3D staging.",
+  "fr": "Guide de structure pour Qwen-Image 2.1 : un plan suit la profondeur ou la pose de sa mise en scène 3D."
+ },
+ "Shot: the other figures are a character, structure guide ({name}, {picture}, {count})": {
+  "en": "Shot: the other figures are a character, structure guide ({name}, {picture}, {count})",
+  "fr": "Plan : les autres silhouettes sont un personnage, guide de structure ({name}, {picture}, {count})"
+ },
+ "Save as...": {
+  "en": "Save as...",
+  "fr": "Enregistrer sous..."
+ },
+ "Title of the copy": {
+  "en": "Title of the copy",
+  "fr": "Titre de la copie"
+ },
+ "Save the copy": {
+  "en": "Save the copy",
+  "fr": "Enregistrer la copie"
+ },
+ "The project is saved by itself after every change. This makes a copy under another title and opens it.": {
+  "en": "The project is saved by itself after every change. This makes a copy under another title and opens it.",
+  "fr": "Le projet s'enregistre tout seul après chaque modification. Ceci en fait une copie sous un autre titre et l'ouvre."
+ },
+ "saving...": {
+  "en": "saving...",
+  "fr": "enregistrement..."
+ },
+ "saved": {
+  "en": "saved",
+  "fr": "enregistré"
+ },
+ "file not found": {
+  "en": "file not found",
+  "fr": "fichier introuvable"
+ },
+ "Forget": {
+  "en": "Forget",
+  "fr": "Oublier"
+ },
+ "Add LoRA files...": {
+  "en": "Add LoRA files...",
+  "fr": "Ajouter des fichiers LoRA..."
+ },
+ "LoRA files": {
+  "en": "LoRA files",
+  "fr": "Fichiers LoRA"
+ },
+ "Open the LoRA folder": {
+  "en": "Open the LoRA folder",
+  "fr": "Ouvrir le dossier des LoRA"
+ },
+ "No LoRA yet. A LoRA is made for one model (Qwen-Image 2.1, Qwen-Image-Edit 2511 or Qwen-Image 2512); its trigger words go in the prompt or in \"Added to every picture\".": {
+  "en": "No LoRA yet. A LoRA is made for one model (Qwen-Image 2.1, Qwen-Image-Edit 2511 or Qwen-Image 2512); its trigger words go in the prompt or in \"Added to every picture\".",
+  "fr": "Pas encore de LoRA. Un LoRA est fait pour un modèle (Qwen-Image 2.1, Qwen-Image-Edit 2511 ou Qwen-Image 2512) ; ses mots déclencheurs vont dans le prompt ou dans « Ajouté à chaque image »."
+ },
+ "picture(s). The first ones are the references sent to the model": {
+  "en": "picture(s). The first ones are the references sent to the model",
+  "fr": "image(s). Les premières sont les références envoyées au modèle"
+ },
+ "\"First\" puts a picture at the head of the list; kept pictures are added at the end.": {
+  "en": "\"First\" puts a picture at the head of the list; kept pictures are added at the end.",
+  "fr": "« En premier » met une image en tête de liste ; les images gardées sont ajoutées à la fin."
+ },
+ "First": {
+  "en": "First",
+  "fr": "En premier"
+ },
+ "Take this picture out of the item (the file stays in the project)": {
+  "en": "Take this picture out of the item (the file stays in the project)",
+  "fr": "Retirer cette image de l'élément (le fichier reste dans le projet)"
+ },
+ "Added to the pictures of": {
+  "en": "Added to the pictures of",
+  "fr": "Ajoutée aux images de"
+ },
+ "Set as the first image of the shot": {
+  "en": "Set as the first image of the shot",
+  "fr": "Définie comme première image du plan"
  }
 }

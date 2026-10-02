@@ -7,6 +7,7 @@ MCP) are picked up when the window has nothing unsaved. Undo/redo keeps whole sn
 """
 import copy
 import json
+import os
 import sys
 import threading
 import time
@@ -47,7 +48,7 @@ def remember(folder):
 class Editor:
     def __init__(self, runtime):
         self.runtime = runtime
-        self.actor = runtime.authenticate(runtime.create_client('ImGui')['token'])
+        self.actor = runtime.authenticate(runtime.create_client('ImGui', permissions=('network',))['token'])
         self.session = runtime.create_session(self.actor, temporary=False)['sessionId']
         self.board = None
         self.selected = None
@@ -76,6 +77,8 @@ class Editor:
         self.film = FilmExportWindow(self)
         from gui.workflow_export import WorkflowExportWindow
         self.workflow = WorkflowExportWindow(self)
+        from gui.images_tab import ImagesTab
+        self.image_tab = ImagesTab(self)
         test = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--ui-test-project=')), '')
         if test:
             self.open(test)
@@ -196,6 +199,25 @@ class Editor:
         if not self.board:
             return
         native.same_line()
+        if imgui.button('Save as...'):
+            self.new_title = self.board.doc['title'] + ' 2'
+            native.open_popup('save-as')
+        if native.begin_popup('save-as'):
+            native.text_disabled(tr('The project is saved by itself after every change. This makes a copy under '
+                                    'another title and opens it.'))
+            native.set_next_item_width(260)
+            _, self.new_title = imgui.input_text('Title of the copy', self.new_title)
+            if imgui.button('Save the copy') and self.new_title.strip():
+                try:
+                    self.save()
+                    duplicate = self.board.save_as(self.board.folder.parent, self.new_title.strip())
+                    self.open(duplicate.folder)
+                    self.new_title = ''
+                    native.close_current_popup()
+                except (model.StoryboardError, OSError) as exc:
+                    self.message = str(exc)
+            native.end_popup()
+        native.same_line()
         native.begin_disabled(not self.undo)
         if imgui.button('Undo') or (native.get_io().key_ctrl and native.is_key_pressed(native.Key.z) and not native.get_io().want_text_input):
             self.undo_step()
@@ -244,7 +266,9 @@ class Editor:
         total = self.board.total_duration()
         native.same_line()
         native.text(f'{self.board.doc["title"]}  -  {len(self.board.panels())} {tr("panels")}  -  '
-                    f'{int(total // 60)}:{total % 60:04.1f}' + ('  *' if self.dirty else ''))
+                    f'{int(total // 60)}:{total % 60:04.1f}  -  ' + tr('saving...' if self.dirty else 'saved'))
+        if native.is_item_hovered():
+            native.set_tooltip(str(self.board.folder))
         if self.job:
             job = self.runtime.get_job(self.actor, self.job['jobId'])
             self.job = job
@@ -830,7 +854,8 @@ def main():
     (ROOT / 'data/settings').mkdir(parents=True, exist_ok=True)
     runner.ini_filename = str(ROOT / 'data/settings/imgui.ini')
     runner.fps_idling.enable_idling = True
-    with create_runtime(ROOT / 'data/jobs') as runtime:
+    # CYTOOLS_STORYBOARD_JOBS: another jobs folder, so a test window can run next to the real one
+    with create_runtime(Path(os.environ.get('CYTOOLS_STORYBOARD_JOBS') or ROOT / 'data/jobs')) as runtime:
         editor = Editor(runtime)
         from gui.updates import UpdatesTab
         updates = UpdatesTab()
@@ -865,6 +890,21 @@ def main():
                     try:
                         editor.toolbar()
                         editor.layout.draw()
+                        editor.frames += 1
+                        editor.track()
+                    except Exception:
+                        import traceback
+                        from ui_common import journal
+                        journal.write(traceback.format_exc(), 'ERROR')
+                        raise
+                    imgui.end_tab_item()
+                flags = native.TabItemFlags_.set_selected if editor.select_tab == 'Images' else 0
+                opened, _ = imgui.begin_tab_item('Images###tab-images', None, flags)
+                if opened:
+                    editor.select_tab = ''
+                    try:
+                        editor.toolbar()
+                        editor.image_tab.draw()
                         editor.frames += 1
                         editor.track()
                     except Exception:

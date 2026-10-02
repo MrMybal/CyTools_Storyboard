@@ -40,6 +40,23 @@ class ModelTests(unittest.TestCase):
         self.assertTrue((moved / again.panels()[0]['images'][0]['file']).is_file())
         self.assertEqual(again.doc['assetNames'][Path(relative).name], 'red sketch.png')
 
+    def test_save_as_makes_an_independent_copy(self):
+        self.board.add_panel(title='Opening', duration=6, images=[{'file': str(self.red), 'role': 'sketch'}])
+        self.board.save()
+        duplicate = self.board.save_as(self.tmp, 'Second film')
+        self.assertEqual((duplicate.folder.name, duplicate.doc['title']), ('Second film.cystory', 'Second film'))
+        self.assertNotEqual(duplicate.doc['id'], self.board.doc['id'])
+        again = self.model.Storyboard.load(duplicate.folder)
+        self.assertTrue((again.folder / again.panels()[0]['images'][0]['file']).is_file(), 'the assets came along')
+        again.panels()[0]['title'] = 'Changed'
+        again.save()
+        self.assertEqual(self.model.Storyboard.load(self.board.folder).panels()[0]['title'], 'Opening')
+        self.assertFalse((duplicate.folder / 'exports').exists())
+        with self.assertRaises(self.model.StoryboardError):
+            self.board.save_as(self.tmp, 'Second film')
+        with self.assertRaises(self.model.StoryboardError):
+            self.board.save_as(self.tmp, '  ')
+
     def test_same_image_is_stored_once(self):
         a = self.board.import_asset(self.red)
         b = self.board.import_asset(shutil.copy(self.red, self.tmp / 'again.png'))

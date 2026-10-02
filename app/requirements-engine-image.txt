@@ -1,0 +1,6 @@
+# Image engine environment (runtime/engines/image). PyTorch is installed first by setup_engine.py
+# from the CUDA 13 wheel index declared in engines.json (ComfyUI's int8 kernels, comfy-kitchen, need
+# the CUDA 13 build), then the requirements.txt of the pinned ComfyUI checkout (runtime/sources/ComfyUI),
+# then this file: what the worker itself uses.
+psutil
+aiohttp

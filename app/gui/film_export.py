@@ -16,7 +16,11 @@ from storyboard import h3film
 from storyboard.model import StoryboardError
 
 TEMPLATES = [('continuityText', 'Carried opening frames ({frames}, {seconds})'),
+             ('shotText', 'Shot header in a grouped segment ({shot}, {start}, {end}, {title})'),
+             ('dialogueText', 'Line of dialogue ({name}, {how}, {line})'),
+             ('soundText', 'Sound of a shot ({text})'), ('musicText', 'Music of a shot ({text})'),
              ('identityText', 'Character identity ({n}, {name}, {description})'),
+             ('identityMoreText', 'Character, other pictures ({n}, {name}, {description})'),
              ('layoutText', 'Layout render ({n})'), ('sketchText', 'Sketch ({n})'), ('firstText', 'First frame ({n})'),
              ('lastText', 'Last frame ({n})'), ('keyframeText', 'Keyframe ({n}, {time})'),
              ('referenceText', 'Shot reference ({n})'), ('locationText', 'Location ({n}, {name}, {description})'),
@@ -134,9 +138,28 @@ class FilmExportWindow:
 
     def _body(self):
         o = self.options
-        native.text_wrapped(tr('One H3 segment per panel. Each segment starts a few frames before the previous one ends: '
-                               'those frames carry places, characters, light and sound across the cut, then are '
-                               'removed. The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.'))
+        native.text_wrapped(tr('The panels of a sequence are grouped into H3 segments of about 20 s: H3 cuts between '
+                               'the shots of a segment itself, so characters, places and sound stay continuous. A '
+                               'segment may start a few frames before the previous one ends (crossfades by default). '
+                               'The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.'))
+        native.separator_text(tr('Segments'))
+        groupings = list(h3film.GROUPINGS)
+        native.set_next_item_width(300)
+        changed, index = native.combo(tr('Grouping') + '##grouping', groupings.index(o['grouping']),
+                                      [tr('one segment per panel'), tr('panels of a sequence together'),
+                                       tr('panels of the whole film together')])
+        if changed:
+            o['grouping'] = groupings[index]
+        if o['grouping'] != 'panel':
+            native.same_line()
+            native.set_next_item_width(160)
+            _, o['maxSegmentSeconds'] = imgui.slider_float('Longest segment (s)', float(o['maxSegmentSeconds']),
+                                                           5.0, 60.0, '%.0f')
+            native.same_line()
+            native.set_next_item_width(110)
+            _, o['maxShotsPerSegment'] = imgui.slider_int('Shots per segment (0 = any)', int(o['maxShotsPerSegment']), 0, 12)
+            native.text_disabled(tr('H3 was trained on segments of up to 15 s; longer ones work but motion and faces '
+                                    'may drift. Fewer shots per segment follow the prompt more closely.'))
         native.separator_text(tr('Picture'))
         edges = list(h3film.SHORT_EDGES)
         native.set_next_item_width(120)
@@ -173,10 +196,12 @@ class FilmExportWindow:
         if changed:
             o['identityScope'] = scopes[index]
         native.same_line()
+        native.set_next_item_width(70)
+        _, o['identityPictures'] = imgui.slider_int('Pictures per character', int(o['identityPictures']), 1, 6)
         shots = ['main', 'all', 'none']
         native.set_next_item_width(260)
         changed, index = native.combo(tr('Shot pictures') + '##shots', shots.index(o['shotPictures']),
-                                      [tr('main (layout render first)'), tr('all the panel images'), tr('none')])
+                                      [tr('main (first image, else layout render)'), tr('all the panel images'), tr('none')])
         if changed:
             o['shotPictures'] = shots[index]
         _, o['includeLocations'] = imgui.checkbox('Locations', bool(o['includeLocations']))

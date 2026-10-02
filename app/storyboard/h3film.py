@@ -1,20 +1,25 @@
 """Turn a storyboard into a multi-segment MiniMax H3 film (CyTools film file + ComfyUI workflows).
 
-The film is a MiniMax H3 Timeline Director timeline: one generation window per panel, in
-order, each one starting a few frames before the previous one ends. Those overlap frames
-carry the previous segment's latent into the next one (Drift-Control), so places,
-characters, light and sound continue across cuts; they are removed at assembly. Every
-segment gets its own pictures, numbered from <Picture 1>:
+The film is a MiniMax H3 Timeline Director timeline of generation windows. By default the
+panels of a sequence are grouped into windows of about 20 seconds (`grouping`,
+`maxSegmentSeconds`, `maxShotsPerSegment`): H3 cuts between the shots of one window itself,
+which keeps characters, places and sound continuous, and the window's prompt describes its
+shots in order with their times. `grouping: panel` gives one window per panel instead.
+A window may start a few frames before the previous one ends; those overlap frames carry
+the previous latent into the next window (Drift-Control) and are removed at assembly. By
+default they are used where the picture really continues (crossfades), not across cuts.
+Every window gets its own pictures, numbered from <Picture 1>:
 
-  1. identity pictures of the characters (those the panel uses, or every character of
-     the film in every segment), so a face stays the same from one segment to the next;
-  2. the shot's own picture(s): the 2D/3D layout render or the imported images;
-  3. the locations, objects and styles the panel references.
+  1. identity pictures of the characters (those the shots use, or every character of
+     the film in every window), so a face stays the same from one window to the next;
+  2. the locations the shots reference;
+  3. each shot's own picture(s): the 2D/3D layout render or the imported images;
+  4. the objects and styles the shots reference.
 
-Its prompt is the global prompt, a sentence about the carried opening frames, one line per
-picture saying what it is for, then the panel's text. Every sentence is a setting, not a
-fixed rule. H3 takes 9 pictures per segment at most; extra ones are listed as warnings.
-Frame counts follow H3's grid: segments are 5 + 17n frames, overlaps 1 or 5 + 17n.
+Its prompt is the global prompt, one short line per picture, then the shots. Every sentence
+is a setting, not a fixed rule; the defaults stay short because H3 also derives the sound
+from the prompt. H3 takes 9 pictures per window at most; extra ones are listed as warnings.
+Frame counts follow H3's grid: windows are 5 + 17n frames, overlaps 1 or 5 + 17n.
 """
 import copy
 import hashlib
@@ -41,41 +46,45 @@ UPSCALER = 'minimax_h3_latent_upscaler_3d_conv_v1_fp16.safetensors'
 TURBO_MODEL = 'minimax_h3_fused_refdelta_r1024_turbo8_mystic07_int8_convrot.safetensors'
 CONTROL_PATCH = 'minimax_h3_fun_controlnet_union_2.0_pruned_int8_convrot.safetensors'
 SHORT_EDGES = (384, 448, 512, 544, 576, 640, 704, 768)
+GROUPINGS = ('panel', 'sequence', 'film')
+# How the prompt of a grouped window moves from one shot to the next (the transition out of the earlier shot).
+SHOT_TRANSITIONS = {'cut': 'Cut.', 'crossfade': 'Dissolve.', 'fade to black': 'Fade to black.',
+                    'fade from black': 'Fade in from black.'}
 
 DEFAULTS = {
     'shortEdge': 544, 'width': 0, 'height': 0,
-    'overlapFrames': 39, 'overlapOnCuts': True, 'overlapOnFades': False,
+    'grouping': 'sequence', 'maxSegmentSeconds': 20.0, 'maxShotsPerSegment': 0,
+    'overlapFrames': 39, 'overlapOnCuts': False, 'overlapOnFades': False,
     'globalPrompt': '', 'includeStyle': True, 'includeDescription': False,
-    'referenceNote': 'Reference pictures are visual guides, not frozen frames; generate natural movement. '
-                     'Keep every character, place and object consistent across the whole film.',
-    'continuityText': 'The first {frames} frames continue the preceding segment and serve as overlap context; '
-                      'they will be removed from this segment in the final edit. After this prefix, perform the '
-                      'new shot described below.',
-    'identityScope': 'panel',
-    'identityText': '<Picture {n}> defines the exact identity of {name}: face, body, clothing and distinguishing '
-                    'marks{description}. It takes precedence over any other picture for {name}.',
+    'referenceNote': '',
+    'continuityText': 'It continues directly from the previous shot.',
+    'shotText': 'Shot {shot} ({start:.1f}-{end:.1f} s):',
+    'dialogueText': '{name}{how} says: "{line}"',
+    'soundText': 'Sound: {text}',
+    'musicText': 'Music: {text}',
+    'identityScope': 'panel', 'identityPictures': 1,
+    'identityText': '<Picture {n}> is {name}{description}.',
+    'identityMoreText': '<Picture {n}> is {name} again, from another angle.',
     'shotPictures': 'main',
-    'layoutText': '<Picture {n}> is a rough layout of this shot: follow its framing, camera angle and the placement '
-                  'of people and objects, not its drawing style or its simple shapes.',
-    'sketchText': '<Picture {n}> is a sketch of this shot: follow its composition, not its drawing style.',
-    'firstText': '<Picture {n}> shows how this shot begins.',
-    'lastText': '<Picture {n}> shows how this shot ends.',
-    'keyframeText': '<Picture {n}> shows this shot at {time:.1f} s.',
-    'referenceText': '<Picture {n}> is a visual reference for this shot.',
+    'layoutText': '<Picture {n}> is the framing of shot {shot}.',
+    'sketchText': '<Picture {n}> is a sketch of shot {shot}.',
+    'firstText': '<Picture {n}> is the first frame of shot {shot}.',
+    'lastText': '<Picture {n}> is the last frame of shot {shot}.',
+    'keyframeText': '<Picture {n}> is shot {shot} at {time:.1f} s.',
+    'referenceText': '<Picture {n}> is a visual reference for shot {shot}.',
     'includeLocations': True,
-    'locationText': '<Picture {n}> shows {name}{description}; keep this place identical whenever it appears.',
+    'locationText': '<Picture {n}> is {name}{description}.',
     'includeObjects': True,
-    'objectText': '<Picture {n}> shows {name}{description}.',
+    'objectText': '<Picture {n}> is {name}{description}.',
     'includeStyles': True,
-    'styleText': '<Picture {n}> gives the visual style ({name}{description}), not the content.',
+    'styleText': '<Picture {n}> gives the visual style, not the content.',
     'includeSound': True,
     'includeVideos': True,
-    'videoText': '<Video {n}> is a motion reference, {name}{description}: follow its movement, action and camera, '
-                 'not its exact appearance.',
+    'videoText': '<Video {n}> is a motion reference for {name}: follow its movement and camera, not its look.',
     'includeVoices': True,
-    'voiceText': "<Audio {n}> is the voice of {name}; use it for {name}'s lines.",
+    'voiceText': '<Audio {n}> is the voice of {name}.',
     'includeAudio': True,
-    'audioText': '<Audio {n}> is a sound reference: {name}{description}.',
+    'audioText': '<Audio {n}> is a sound reference: {name}.',
     'videoSound': False,
     'videoSoundText': '<Audio {n}> is the sound of <Video {video}> ({name}).',
     'maxReferenceSeconds': 15.0,
@@ -97,8 +106,16 @@ def options_for(board, overrides=None):
         options[key] = value
     if int(options['overlapFrames']) not in OVERLAPS:
         raise StoryboardError('overlapFrames must be one of ' + ', '.join(map(str, OVERLAPS)) + ' (H3 frame grid).')
+    if options['grouping'] not in GROUPINGS:
+        raise StoryboardError('grouping must be one of ' + ', '.join(GROUPINGS) + '.')
+    if not 2.0 <= float(options['maxSegmentSeconds']) <= MAX_SEGMENT_FRAMES / FPS:
+        raise StoryboardError(f'maxSegmentSeconds goes from 2 to {MAX_SEGMENT_FRAMES // FPS} seconds.')
+    if int(options['maxShotsPerSegment']) < 0:
+        raise StoryboardError('maxShotsPerSegment is 0 (no limit) or more.')
     if options['identityScope'] not in ('panel', 'film'):
         raise StoryboardError('identityScope must be "panel" or "film".')
+    if not 1 <= int(options['identityPictures']) <= 6:
+        raise StoryboardError('identityPictures goes from 1 to 6 pictures per character.')
     if options['shotPictures'] not in ('main', 'all', 'none'):
         raise StoryboardError('shotPictures must be "main", "all" or "none".')
     if not 2.0 <= float(options['maxReferenceSeconds']) <= 15.0:
@@ -147,17 +164,50 @@ def canvas(board, options):
     return int(width), int(height)
 
 
+def group_panels(board, options):
+    """The panels of each window, in order: one per panel, or consecutive panels of a sequence
+    (or of the whole film) filling windows of about maxSegmentSeconds, balanced so a sequence
+    of 23 s gives two windows of 11-12 s rather than 20 + 3."""
+    if options['grouping'] == 'panel':
+        return [[panel] for panel in board.panels()]
+    runs = [sequence['panels'] for sequence in board.doc['sequences'] if sequence['panels']]
+    if options['grouping'] == 'film':
+        runs = [board.panels()] if board.panels() else []
+    limit = float(options['maxSegmentSeconds'])
+    shots = int(options['maxShotsPerSegment'])
+    groups = []
+    for run in runs:
+        total = sum(float(p['duration']) for p in run)
+        parts = max(1, math.ceil(total / limit - 1e-9), math.ceil(len(run) / shots) if shots else 1)
+        target = total / parts
+        group, seconds = [], 0.0
+        for panel in run:
+            duration = float(panel['duration'])
+            full = seconds + duration > limit + 1e-9 or (shots and len(group) >= shots)
+            balanced = seconds + duration / 2 > target and parts > 1
+            if group and (full or balanced):
+                groups.append(group)
+                parts -= 1
+                group, seconds = [], 0.0
+            group.append(panel)
+            seconds += duration
+        if group:
+            groups.append(group)
+    return groups
+
+
 def plan_segments(board, options):
-    """Frame windows: [{'panel', 'overlap', 'start', 'end', 'length', 'visible', 'requested'}]."""
-    panels = board.panels()
+    """Frame windows: [{'panel' (first), 'panels', 'shots', 'overlap', 'start', 'end', 'length',
+    'visible', 'requested'}]; shots are (panel, start s, end s) inside the visible part."""
     wanted = int(options['overlapFrames'])
-    segments, warnings = [], []
+    segments, warnings, long_ones = [], [], []
     previous = None
-    for index, panel in enumerate(panels):
-        visible = max(1, round(float(panel['duration']) * FPS))
+    for index, panels in enumerate(group_panels(board, options)):
+        requested = sum(float(p['duration']) for p in panels)
+        visible = max(1, round(requested * FPS))
         overlap = 0
         if previous is not None and wanted:
-            transition = previous['panel']['transition']['type']
+            transition = previous['panels'][-1]['transition']['type']
             fade = transition in ('fade to black', 'fade from black')
             if (transition == 'cut' and options['overlapOnCuts']) or transition == 'crossfade' or \
                     (fade and options['overlapOnFades']):
@@ -166,18 +216,37 @@ def plan_segments(board, options):
         if length <= overlap:
             length = segment_length(overlap + 17)
         if length > MAX_SEGMENT_FRAMES:
-            raise StoryboardError(f'Panel {index + 1} is too long for one H3 segment (150 s at most).')
+            raise StoryboardError(f'Segment {index + 1} is too long for one H3 segment (150 s at most).')
         start = 0 if previous is None else previous['end'] - overlap
-        segment = {'panel': panel, 'number': index + 1, 'overlap': overlap, 'start': start, 'end': start + length,
-                   'length': length, 'visible': length - overlap, 'requested': float(panel['duration'])}
+        real = (length - overlap) / FPS
+        shots, at = [], 0.0
+        for number, panel in enumerate(panels):
+            end = real if number == len(panels) - 1 else min(real, at + float(panel['duration']))
+            shots.append((panel, at, end))
+            at = end
+        segment = {'panel': panels[0], 'panels': panels, 'shots': shots, 'number': index + 1, 'overlap': overlap,
+                   'start': start, 'end': start + length, 'length': length, 'visible': length - overlap,
+                   'requested': requested}
         if length / FPS > H3_TRAINED_SECONDS + 0.05:
-            warnings.append(f'Panel {index + 1} "{panel["title"]}": its segment lasts {length / FPS:.1f} s, beyond '
-                            f'the {H3_TRAINED_SECONDS:.0f} s H3 was trained on; split the panel if motion degrades.')
+            long_ones.append(f'{index + 1} ({length / FPS:.1f} s)')
         segments.append(segment)
         previous = segment
     if not segments:
         raise StoryboardError('The storyboard has no panel.')
+    if long_ones:
+        warnings.append(f'Segments {", ".join(long_ones)} last longer than the {H3_TRAINED_SECONDS:.0f} s H3 was '
+                        'trained on; lower the segment length if motion or faces degrade.')
     return segments, warnings
+
+
+def segment_title(board, segment):
+    panels = segment['panels']
+    if len(panels) == 1:
+        return panels[0]['title']
+    for sequence in board.doc['sequences']:
+        if [p['id'] for p in sequence['panels']] == [p['id'] for p in panels]:
+            return sequence.get('title') or panels[0]['title']
+    return f'{panels[0]["title"]} - {panels[-1]["title"]}'
 
 
 # ---------------------------------------------------------------------------- pictures
@@ -210,8 +279,8 @@ def _image_file(board, relative):
     return path if path.suffix.lower() in ('.png', '.jpg', '.jpeg', '.webp', '.bmp') and path.is_file() else None
 
 
-def shot_pictures(board, panel, options):
-    """[(path, template, extra format values)] for the panel's own pictures."""
+def shot_pictures(board, panel, options, shot=1):
+    """[(path, template, extra format values)] for the panel's own pictures (shot `shot` of its window)."""
     if options['shotPictures'] == 'none':
         return []
     result = []
@@ -219,7 +288,8 @@ def shot_pictures(board, panel, options):
     if layout.get('mode') in ('2d', '3d') and layout.get('render'):
         render = _image_file(board, layout['render'])
         if render:
-            result.append((render, options['layoutText'], {'label': f'{layout["mode"].upper()} layout'}))
+            result.append((render, options['layoutText'], {'shot': shot,
+                                                           'label': f'{layout["mode"].upper()} layout, shot {shot}'}))
     order = {'first': 0, 'sketch': 1, 'keyframe': 2, 'reference': 3, 'last': 4}
     images = sorted(panel['images'], key=lambda e: (order.get(e['role'], 9), e.get('time', 0)))
     for entry in images:
@@ -228,35 +298,56 @@ def shot_pictures(board, panel, options):
             continue
         template = options[{'sketch': 'sketchText', 'first': 'firstText', 'last': 'lastText',
                             'keyframe': 'keyframeText', 'reference': 'referenceText'}[entry['role']]]
-        result.append((path, template, {'time': float(entry.get('time', 0.0)), 'label': entry['role']}))
+        result.append((path, template, {'shot': shot, 'time': float(entry.get('time', 0.0)),
+                                        'label': f'{entry["role"]}, shot {shot}'}))
+    # A real first frame (imported or generated from the layout) says more than the mannequin render.
+    result.sort(key=lambda entry: 0 if entry[2]['label'].startswith('first') else 1)
     if options['shotPictures'] == 'main':
         return result[:1]
     return result
 
 
-def segment_pictures(board, panel, options, characters):
-    """Ordered [(path, sentence template, values)] and the list of pictures left out."""
+def _referenced_all(board, panels):
+    seen, result = set(), []
+    for panel in panels:
+        for item in _referenced(board, panel):
+            if item['id'] not in seen:
+                seen.add(item['id'])
+                result.append(item)
+    return result
+
+
+def segment_pictures(board, panels, options, characters):
+    """Ordered [(path, sentence template, values)] of a window and the list of pictures left out."""
     wanted = []
-    referenced = _referenced(board, panel)
+    referenced = _referenced_all(board, panels)
     identities = characters if options['identityScope'] == 'film' else \
         [item for item in referenced if item['kind'] == 'character' and item['files']]
-    for item in identities:
-        path = _image_file(board, item['files'][0])
-        if path:
-            wanted.append((path, options['identityText'], {'name': item['name'], 'description': _describe(item),
-                                                           'label': item['name']}))
-    wanted += shot_pictures(board, panel, options)
-    for kind, flag, template in (('location', 'includeLocations', 'locationText'),
-                                 ('object', 'includeObjects', 'objectText'),
-                                 ('style', 'includeStyles', 'styleText')):
+
+    def library(kind, flag, template):
         if not options[flag]:
-            continue
+            return
         for item in referenced:
             if item['kind'] == kind and item['files']:
                 path = _image_file(board, item['files'][0])
                 if path:
                     wanted.append((path, options[template], {'name': item['name'], 'description': _describe(item),
                                                              'label': item['name']}))
+
+    for item in identities:
+        # the first picture of a character is its identity; the following ones (other angles, generated
+        # in the Images tab) are added when identityPictures asks for more than one
+        from .imagegen import character_pictures
+        paths = character_pictures(board, item, int(options['identityPictures']))
+        for position, path in enumerate(paths):
+            wanted.append((path, options['identityMoreText' if position else 'identityText'],
+                           {'name': item['name'], 'description': _describe(item),
+                            'label': item['name'] + (f' ({position + 1})' if position else '')}))
+    library('location', 'includeLocations', 'locationText')
+    for shot, panel in enumerate(panels, start=1):
+        wanted += shot_pictures(board, panel, options, shot)
+    library('object', 'includeObjects', 'objectText')
+    library('style', 'includeStyles', 'styleText')
     seen, kept = set(), []
     for entry in wanted:
         if entry[0] not in seen:
@@ -295,25 +386,28 @@ def _media_file(board, item, suffixes):
     return None
 
 
-def segment_videos(board, panel, options):
-    """[(path, template, values)] for the video references of a panel (3 at most)."""
+def segment_videos(board, panels, options):
+    """[(path, template, values)] for the video references of a window (3 at most); values['shot']
+    is the index of the first shot that uses the video."""
     if not options['includeVideos']:
         return [], []
-    wanted = []
-    for item in _referenced(board, panel):
-        if item['kind'] == 'video':
-            path = _media_file(board, item, VIDEO_SUFFIXES)
-            if path:
-                wanted.append((path, options['videoText'], {'name': item['name'], 'description': _describe(item),
-                                                           'label': item['name']}))
+    wanted, seen = [], set()
+    for shot, panel in enumerate(panels):
+        for item in _referenced(board, panel):
+            if item['kind'] == 'video' and item['id'] not in seen:
+                path = _media_file(board, item, VIDEO_SUFFIXES)
+                if path:
+                    seen.add(item['id'])
+                    wanted.append((path, options['videoText'], {'name': item['name'], 'description': _describe(item),
+                                                               'label': item['name'], 'shot': shot}))
     return wanted[:MAX_VIDEOS], wanted[MAX_VIDEOS:]
 
 
-def segment_audios(board, panel, options, videos, preview=False):
-    """[(path, template, values)] for the sound references of a panel (3 at most): character
+def segment_audios(board, panels, options, videos, preview=False):
+    """[(path, template, values)] for the sound references of a window (3 at most): character
     voices first, then audio items, then (optionally) the sound of the reference videos."""
     wanted = []
-    referenced = _referenced(board, panel)
+    referenced = _referenced_all(board, panels)
     if options['includeVoices']:
         for item in referenced:
             if item['kind'] == 'character':
@@ -362,9 +456,51 @@ def _fill(template, number, values):
         raise StoryboardError(f'Film text template {template[:40]!r}...: {exc}') from None
 
 
+def shot_text(board, panel, options):
+    """One shot as prompt prose: framing, scene, action, camera, lines, free text, sound and music.
+    Consecutive lines of one speaker are joined so the voice reads them as one speech."""
+    prompt = panel['prompt']
+    names = {item['id']: item['name'] for item in board.doc['library']}
+    parts = []
+    shot = ' '.join(x for x in (prompt.get('shotSize'), prompt.get('angle') and f'({prompt["angle"]})') if x)
+    if shot:
+        parts.append(shot[0].upper() + shot[1:] + '.')
+    for key in ('scene', 'action'):
+        if prompt.get(key):
+            parts.append(export.sentence(prompt[key]))
+    camera = export.describe_camera(prompt)
+    if camera:
+        parts.append(camera)
+    speeches = []
+    for line in prompt.get('dialogue') or []:
+        text = (line.get('line') or '').strip()
+        if not text:
+            continue
+        name = names.get(line.get('speaker'), line.get('speaker') or '')
+        how = ', '.join(x for x in ('off screen' if line.get('offScreen') else '', (line.get('delivery') or '').strip()) if x)
+        key = (name, how)
+        if speeches and speeches[-1][0] == key:
+            speeches[-1][1].append(text)
+        else:
+            speeches.append((key, [text]))
+    for (name, how), lines in speeches:
+        joined = ' '.join(lines)
+        if name:
+            parts.append(_fill(options['dialogueText'], 0, {'name': name, 'how': f' ({how})' if how else '',
+                                                           'line': joined}))
+        else:
+            parts.append(f'"{joined}"')
+    if prompt.get('freeText'):
+        parts.append(export.sentence(prompt['freeText']))
+    if options['includeSound']:
+        for key, template in (('sound', 'soundText'), ('music', 'musicText')):
+            if prompt.get(key) and options[template].strip():
+                parts.append(_fill(options[template], 0, {'text': export.sentence(prompt[key])}))
+    return ' '.join(parts)
+
+
 def segment_prompt(board, segment, media, options, head):
     """media: {'pictures': [...], 'videos': [...], 'audios': [...]} of (path, template, values)."""
-    panel = segment['panel']
     parts = []
     if segment['overlap'] and options['continuityText'].strip():
         parts.append(_fill(options['continuityText'], 0, {'frames': segment['overlap'],
@@ -372,14 +508,19 @@ def segment_prompt(board, segment, media, options, head):
     for kind in ('pictures', 'videos', 'audios'):
         parts += [_fill(template, number, values) for number, (_, template, values)
                   in enumerate(media.get(kind) or [], start=1)]
-    text = export.panel_text(board, panel)
-    if text:
-        parts.append(text)
-    if options['includeSound']:
-        for key, label in (('sound', 'Sound'), ('music', 'Music')):
-            if panel['prompt'].get(key):
-                parts.append(f'{label}: {export.sentence(panel["prompt"][key])}')
-    body = ' '.join(parts)
+    shots = segment['shots']
+    lines = [' '.join(parts)] if parts else []
+    for index, (panel, start, end) in enumerate(shots):
+        text = shot_text(board, panel, options)
+        if len(shots) > 1:
+            header = _fill(options['shotText'], 0, {'shot': index + 1, 'start': start, 'end': end,
+                                                    'title': panel['title']}) if options['shotText'].strip() else ''
+            if index:
+                header = (SHOT_TRANSITIONS.get(shots[index - 1][0]['transition']['type'], 'Cut.') + ' ' + header).strip()
+            text = (header + ' ' + text).strip()
+        if text:
+            lines.append(text)
+    body = '\n'.join(lines)
     return (head + '\n\n' + body).strip() if head else body
 
 
@@ -389,14 +530,33 @@ def _slug(text):
 
 
 def segment_depth_samples(board, segments, index):
-    """Depth frames of a film segment: its carried opening frames hold the end of the previous
-    panel (when that one is staged in 3D, else this panel's start), then this panel's move."""
+    """Control frames of a film segment: its carried opening frames hold the end of the previous
+    panel (when that one is staged in 3D, else this segment's first panel), then each shot's move
+    for the shot's own frames."""
     from . import depthcontrol
     segment = segments[index]
-    panel = segment['panel']
-    previous = segments[index - 1]['panel'] if index else None
-    held = (previous, 1.0) if previous is not None and depthcontrol.staged(board, previous) is not None else (panel, 0.0)
-    return [held] * segment['overlap'] + depthcontrol.panel_samples(panel, segment['length'] - segment['overlap'])
+    first = segment['panels'][0]
+    previous = segments[index - 1]['panels'][-1] if index else None
+    held = (previous, 1.0) if previous is not None and depthcontrol.staged(board, previous) is not None else (first, 0.0)
+    samples = [held] * segment['overlap']
+    visible = segment['length'] - segment['overlap']
+    for number, (panel, start, end) in enumerate(segment['shots']):
+        frames = visible - (len(samples) - segment['overlap']) if number == len(segment['shots']) - 1 else \
+            max(0, round(end * FPS) - round(start * FPS))
+        samples += depthcontrol.panel_samples(panel, frames)
+    return samples
+
+
+def segment_control_source(board, panels, options):
+    """The control source of a window, or '' when one of its shots is not staged in 3D.
+    auto: pose when every shot shows a character, depth when none does, overlay when mixed."""
+    from . import depthcontrol
+    if any(depthcontrol.staged(board, panel) is None for panel in panels):
+        return ''
+    if options.get('controlSource', 'auto') != 'auto' or len(panels) == 1:
+        return depthcontrol.source_for(board, panels[0], options)
+    sources = {depthcontrol.source_for(board, panel, options) for panel in panels}
+    return sources.pop() if len(sources) == 1 else 'overlay'
 
 
 def build(board, overrides=None, preview=False, workdir=None):
@@ -461,11 +621,12 @@ def build(board, overrides=None, preview=False, workdir=None):
     sounds, clips = {}, []
     timeline_segments, summary = [], []
     for segment in segments:
-        panel, number = segment['panel'], segment['number']
-        label = f'Panel {number} "{panel["title"]}"'
-        pictures, dropped = segment_pictures(board, panel, options, characters)
-        videos, extra_videos = segment_videos(board, panel, options)
-        audios, extra_audios = segment_audios(board, panel, options, videos, preview)
+        panel, panels, number = segment['panel'], segment['panels'], segment['number']
+        title = segment_title(board, segment)
+        label = f'Segment {number} "{title}"'
+        pictures, dropped = segment_pictures(board, panels, options, characters)
+        videos, extra_videos = segment_videos(board, panels, options)
+        audios, extra_audios = segment_audios(board, panels, options, videos, preview)
         # H3 takes 12 reference files at most: the least important pictures give way first.
         while len(pictures) + len(videos) + len(audios) > MAX_REFERENCES and len(pictures) > 1:
             dropped.append(pictures.pop())
@@ -479,10 +640,12 @@ def build(board, overrides=None, preview=False, workdir=None):
             warnings.append(f'{label}: H3 needs a picture or a video next to a sound reference.')
         # A reference video sits inside its own segment on the timeline, after the carried
         # frames, marked with its segment so the film plan keeps it out of the other segments.
-        start_seconds = (segment['start'] + segment['overlap']) / FPS
-        room = (segment['end'] - segment['start'] - segment['overlap']) / FPS
         kept_videos = []
         for index, (path, template, values) in enumerate(videos):
+            # the clip starts with the first shot that uses it
+            shot_start = segment['shots'][values.get('shot', 0)][1]
+            start_seconds = (segment['start'] + segment['overlap']) / FPS + shot_start
+            room = (segment['end'] - segment['start'] - segment['overlap']) / FPS - shot_start
             duration = limit if preview else (probe(path)[0] or limit)
             duration = min(duration, limit, room)
             if duration < MIN_REFERENCE_SECONDS:
@@ -502,9 +665,8 @@ def build(board, overrides=None, preview=False, workdir=None):
         window = {'startFrame': segment['start'], 'endFrame': segment['end'],
                   'images': [asset(path)['id'] for path, _, _ in pictures],
                   'audios': [sound(path, values['label']) for path, _, values in audios], 'prompt': prompt}
-        source = ''
-        if control and depthcontrol.staged(board, panel) is not None:
-            source = depthcontrol.source_for(board, panel, options)
+        source = segment_control_source(board, panels, options) if control else ''
+        if source:
             name = f'media/{source}_{panel["id"]}_s{number}.mp4'
             if not preview:
                 if workdir is None:
@@ -517,7 +679,9 @@ def build(board, overrides=None, preview=False, workdir=None):
             window['cytoolsControl'] = {'file': name, 'strength': control['strength'], 'start': control['start'],
                                         'end': control['end']}
         timeline_segments.append(window)
-        summary.append({'panel': panel['id'], 'number': number, 'title': panel['title'],
+        summary.append({'panel': panel['id'], 'panels': [p['id'] for p in panels], 'number': number, 'title': title,
+                        'shots': [{'panel': p['id'], 'title': p['title'], 'start': round(s, 3), 'end': round(e, 3)}
+                                  for p, s, e in segment['shots']],
                         'startFrame': segment['start'], 'endFrame': segment['end'], 'length': segment['length'],
                         'overlap': segment['overlap'], 'requestedSeconds': segment['requested'],
                         'seconds': segment['visible'] / FPS,
