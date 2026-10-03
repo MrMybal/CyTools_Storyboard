@@ -70,3 +70,8 @@ ComfyUI v0.37.0 (both workflows loaded in the ComfyUI page and accepted); the wi
 sample project (`data/reports/ui-storyboard-*.png`); `CyTools_Storyboard.exe` from `C:\`;
 a real MCP session (create, add panel, describe). Not executed: Linux, a real GitHub release,
 the interactive gestures (drag and drop, duration handles, paste) by a person.
+
+
+## Application icon
+
+The logo source is assets/branding/logo.png. build_icon.ps1 derives the 16-256 px Windows ICO and assets/app_settings/icon.png for Hello ImGui. build_launcher.ps1 embeds the ICO in the launcher. branding.py selects assets independently of the working directory and assigns this Tool its own Windows taskbar identity.

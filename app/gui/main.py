@@ -848,6 +848,8 @@ class Editor:
 def main():
     smoke = '--smoke-test' in sys.argv
     tab = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--ui-test-tab=')), '')
+    from branding import configure as configure_branding
+    configure_branding('Cyberalien.CyTools_Storyboard')
     runner = hello_imgui.RunnerParams()
     runner.app_window_params.window_title = 'CyTools Storyboard'
     runner.app_window_params.window_geometry.size = (1600, 980)

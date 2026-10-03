@@ -1,5 +1,9 @@
 # CyTools Storyboard
 
+<p align="center">
+  <img src="app/assets/branding/logo.png" alt="CyTools Storyboard logo" width="160">
+</p>
+
 A standalone storyboard and previs application for generated films (Windows desktop application,
 command line and MCP server on one runtime), built on the
 [CyToolsCore](https://github.com/MrMybal/CyToolsCore) SDK. French user guide:
