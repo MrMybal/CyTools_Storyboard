@@ -3,7 +3,7 @@
   "protocolVersion": "1.0",
   "id": "cy.tool.storyboard",
   "name": "CyTools_Storyboard",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Storyboards for generated films: timed panels with images, structured prompts, dialogue, camera, sound and a reference library; panels staged on shared 3D sets of simple shapes or drawn in 2D; contact sheet, script and animatic exports; MiniMax H3 film and workflow exports with depth or pose control videos; reference pictures generated in the application (characters, places, shots) with Qwen-Image on a private ComfyUI engine, or exported as ComfyUI workflows.",
   "vendor": "Cyberalien",
   "author": "Cyberalien",

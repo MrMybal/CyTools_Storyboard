@@ -10574,5 +10574,289 @@
  "Set as the first image of the shot": {
   "en": "Set as the first image of the shot",
   "fr": "Définie comme première image du plan"
+ },
+ "New storyboard": {
+  "en": "New storyboard",
+  "fr": "Nouveau storyboard"
+ },
+ "Storyboard created": {
+  "en": "Storyboard created",
+  "fr": "Storyboard créé"
+ },
+ "Copy saved and opened": {
+  "en": "Copy saved and opened",
+  "fr": "Copie enregistrée et ouverte"
+ },
+ "Undo (Ctrl+Z)": {
+  "en": "Undo (Ctrl+Z)",
+  "fr": "Annuler (Ctrl+Z)"
+ },
+ "Redo (Ctrl+Y)": {
+  "en": "Redo (Ctrl+Y)",
+  "fr": "Rétablir (Ctrl+Y)"
+ },
+ "Add a panel after the selected one": {
+  "en": "Add a panel after the selected one",
+  "fr": "Ajouter un plan après celui sélectionné"
+ },
+ "Sequence": {
+  "en": "Sequence",
+  "fr": "Séquence"
+ },
+ "Add a sequence at the end": {
+  "en": "Add a sequence at the end",
+  "fr": "Ajouter une séquence à la fin"
+ },
+ "Play the animatic": {
+  "en": "Play the animatic",
+  "fr": "Lire l'animatic"
+ },
+ "Contact sheet, script, animatic, MiniMax H3 film and workflow": {
+  "en": "Contact sheet, script, animatic, MiniMax H3 film and workflow",
+  "fr": "Planche contact, script, animatic, film et workflow MiniMax H3"
+ },
+ "DOCUMENTS": {
+  "en": "DOCUMENTS",
+  "fr": "DOCUMENTS"
+ },
+ "Open the project folder": {
+  "en": "Open the project folder",
+  "fr": "Ouvrir le dossier du projet"
+ },
+ "cards": {
+  "en": "cards",
+  "fr": "cartes"
+ },
+ "Open the export": {
+  "en": "Open the export",
+  "fr": "Ouvrir l'export"
+ },
+ "REFERENCES": {
+  "en": "REFERENCES",
+  "fr": "RÉFÉRENCES"
+ },
+ "New reference": {
+  "en": "New reference",
+  "fr": "Nouvelle référence"
+ },
+ "Add this reference to the library": {
+  "en": "Add this reference to the library",
+  "fr": "Ajouter cette référence à la bibliothèque"
+ },
+ "No reference yet": {
+  "en": "No reference yet",
+  "fr": "Pas encore de référence"
+ },
+ "Add characters, places, objects...": {
+  "en": "Add characters, places, objects...",
+  "fr": "Ajoute des personnages, des lieux, des objets..."
+ },
+ "Drag it onto a card to use it in that panel": {
+  "en": "Drag it onto a card to use it in that panel",
+  "fr": "Glisse-la sur une carte pour l'utiliser dans ce plan"
+ },
+ "file(s)": {
+  "en": "file(s)",
+  "fr": "fichier(s)"
+ },
+ "Nothing matches the search.": {
+  "en": "Nothing matches the search.",
+  "fr": "Rien ne correspond à la recherche."
+ },
+ "Name": {
+  "en": "Name",
+  "fr": "Nom"
+ },
+ "Kind": {
+  "en": "Kind",
+  "fr": "Type"
+ },
+ "comma separated": {
+  "en": "comma separated",
+  "fr": "séparés par des virgules"
+ },
+ "Files": {
+  "en": "Files",
+  "fr": "Fichiers"
+ },
+ "Take this file out of the reference": {
+  "en": "Take this file out of the reference",
+  "fr": "Retirer ce fichier de la référence"
+ },
+ "Click to edit, drag to move, right click for more. Drop a reference on it to use it.": {
+  "en": "Click to edit, drag to move, right click for more. Drop a reference on it to use it.",
+  "fr": "Clic pour modifier, glisser pour déplacer, clic droit pour plus. Dépose une référence dessus pour l'utiliser."
+ },
+ "Add a panel to this sequence": {
+  "en": "Add a panel to this sequence",
+  "fr": "Ajouter un plan à cette séquence"
+ },
+ "Delete this sequence": {
+  "en": "Delete this sequence",
+  "fr": "Supprimer cette séquence"
+ },
+ "Delete this sequence?": {
+  "en": "Delete this sequence?",
+  "fr": "Supprimer cette séquence ?"
+ },
+ "TIMELINE": {
+  "en": "TIMELINE",
+  "fr": "FRISE"
+ },
+ "Seconds on screen; the presets set it at once.": {
+  "en": "Seconds on screen; the presets set it at once.",
+  "fr": "Secondes à l'écran ; les préréglages la fixent d'un clic."
+ },
+ "Length": {
+  "en": "Length",
+  "fr": "Durée"
+ },
+ "Notes": {
+  "en": "Notes",
+  "fr": "Notes"
+ },
+ "No image yet: add a sketch, a first frame, a keyframe or a reference.": {
+  "en": "No image yet: add a sketch, a first frame, a keyframe or a reference.",
+  "fr": "Pas encore d'image : ajoute un croquis, une première image, une image clé ou une référence."
+ },
+ "Caption": {
+  "en": "Caption",
+  "fr": "Légende"
+ },
+ "Move up": {
+  "en": "Move up",
+  "fr": "Monter"
+ },
+ "Open the file": {
+  "en": "Open the file",
+  "fr": "Ouvrir le fichier"
+ },
+ "Remove from this panel": {
+  "en": "Remove from this panel",
+  "fr": "Retirer de ce plan"
+ },
+ "what we hear": {
+  "en": "what we hear",
+  "fr": "ce qu'on entend"
+ },
+ "off screen": {
+  "en": "off screen",
+  "fr": "hors champ"
+ },
+ "Remove this line": {
+  "en": "Remove this line",
+  "fr": "Retirer cette réplique"
+ },
+ "What is said": {
+  "en": "What is said",
+  "fr": "Ce qui est dit"
+ },
+ "Added to the prompts of the exports and of the generated pictures.": {
+  "en": "Added to the prompts of the exports and of the generated pictures.",
+  "fr": "Ajouté aux prompts des exports et des images générées."
+ },
+ "No problem found.": {
+  "en": "No problem found.",
+  "fr": "Aucun problème trouvé."
+ },
+ "Pause": {
+  "en": "Pause",
+  "fr": "Pause"
+ },
+ "No storyboard open": {
+  "en": "No storyboard open",
+  "fr": "Aucun storyboard ouvert"
+ },
+ "Create one (+) or open one from the toolbar.": {
+  "en": "Create one (+) or open one from the toolbar.",
+  "fr": "Crée-en un (+) ou ouvre-en un depuis la barre d'outils."
+ },
+ "Generate the pictures MiniMax H3 needs, from your reference pictures or from a text. The pictures you keep go into the project.": {
+  "en": "Generate the pictures MiniMax H3 needs, from your reference pictures or from a text. The pictures you keep go into the project.",
+  "fr": "Génère les images dont MiniMax H3 a besoin, à partir de tes images de référence ou d'un texte. Les images que tu gardes entrent dans le projet."
+ },
+ "e.g. wet armour, night": {
+  "en": "e.g. wet armour, night",
+  "fr": "ex. armure mouillée, nuit"
+ },
+ "The kept picture becomes the first image of the shot.": {
+  "en": "The kept picture becomes the first image of the shot.",
+  "fr": "L'image gardée devient la première image du plan."
+ },
+ "Structure guide: the depth or the pose of the staging guides the picture, the model never sees a mannequin. Staging picture: the mannequin render is sent as a picture.": {
+  "en": "Structure guide: the depth or the pose of the staging guides the picture, the model never sees a mannequin. Staging picture: the mannequin render is sent as a picture.",
+  "fr": "Guide de structure : la profondeur ou la pose de la mise en scène guide l'image, le modèle ne voit jamais de mannequin. Image de mise en scène : le rendu en mannequins est envoyé comme image."
+ },
+ "Uses the few-step LoRA of the model when it has one.": {
+  "en": "Uses the few-step LoRA of the model when it has one.",
+  "fr": "Utilise le LoRA « peu de pas » du modèle quand il en a un."
+ },
+ "The same graph as a ComfyUI workflow, with its reference pictures": {
+  "en": "The same graph as a ComfyUI workflow, with its reference pictures",
+  "fr": "Le même graphe en workflow ComfyUI, avec ses images de référence"
+ },
+ "the model stays loaded": {
+  "en": "the model stays loaded",
+  "fr": "le modèle reste chargé"
+ },
+ "make it a reference": {
+  "en": "make it a reference",
+  "fr": "en faire une référence"
+ },
+ "Give the memory of the model back now": {
+  "en": "Give the memory of the model back now",
+  "fr": "Libérer tout de suite la mémoire du modèle"
+ },
+ "Install the engine and a model below before generating.": {
+  "en": "Install the engine and a model below before generating.",
+  "fr": "Installe le moteur et un modèle ci-dessous avant de générer."
+ },
+ "No picture yet": {
+  "en": "No picture yet",
+  "fr": "Pas encore d'image"
+ },
+ "Choose what to generate on the left, then Generate.": {
+  "en": "Choose what to generate on the left, then Generate.",
+  "fr": "Choisis à gauche ce qu'il faut générer, puis Générer."
+ },
+ "RESULTS": {
+  "en": "RESULTS",
+  "fr": "RÉSULTATS"
+ },
+ "Segments of the film": {
+  "en": "Segments of the film",
+  "fr": "Segments du film"
+ },
+ "Shots of the workflow": {
+  "en": "Shots of the workflow",
+  "fr": "Plans du workflow"
+ },
+ "No panel selected": {
+  "en": "No panel selected",
+  "fr": "Aucun plan sélectionné"
+ },
+ "Previous panel": {
+  "en": "Previous panel",
+  "fr": "Plan précédent"
+ },
+ "Next panel": {
+  "en": "Next panel",
+  "fr": "Plan suivant"
+ },
+ "New stage": {
+  "en": "New stage",
+  "fr": "Nouveau plateau"
+ },
+ "Compact": {
+  "en": "Compact",
+  "fr": "Compacte"
+ },
+ "Comfortable": {
+  "en": "Comfortable",
+  "fr": "Confortable"
+ },
+ "Density": {
+  "en": "Density",
+  "fr": "Densité"
  }
 }

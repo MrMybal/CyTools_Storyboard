@@ -18,7 +18,10 @@ ROOT = APP.parent
 from standalone_log import install as install_standalone_log
 journal = install_standalone_log(ROOT)
 PREFERENCES = ROOT / 'data/settings/ui-preferences.json'
-DEFAULTS = {'language': 'en', 'theme': 'dark', 'font_scale': 1.0, 'autosave_generation': False}
+DEFAULTS = {'language': 'en', 'theme': 'mid-grey', 'density': 'comfortable', 'font_scale': 1.0,
+            'autosave_generation': False}
+# Themes of the earlier interface, read as the CyUI theme closest to them.
+OLD_THEMES = {'dark': 'mid-grey', 'light': 'light-grey', 'classic': 'navy'}
 
 def read(path, default):
     try: return json.loads(path.read_text(encoding='utf-8-sig'))
@@ -30,7 +33,10 @@ class Preferences:
         stored = read(self.path, {})
         self.values = {**DEFAULTS, **(stored if isinstance(stored, dict) else {})}
         if self.values['language'] not in ('en', 'fr'): self.values['language'] = 'en'
-        if self.values['theme'] not in ('dark', 'light', 'classic'): self.values['theme'] = 'dark'
+        import cyui
+        theme = OLD_THEMES.get(self.values['theme'], self.values['theme'])
+        self.values['theme'] = theme if any(theme == key for key, _, _, _ in cyui.THEMES) else cyui.DEFAULT_THEME
+        if self.values['density'] not in cyui.DENSITIES: self.values['density'] = 'comfortable'
         if not isinstance(self.values.get('autosave_generation'),bool): self.values['autosave_generation']=False
         try: self.values['font_scale'] = min(1.6, max(.8, float(self.values['font_scale'])))
         except (TypeError, ValueError): self.values['font_scale'] = 1.0
@@ -352,12 +358,21 @@ class ImGuiFacade:
 imgui = ImGuiFacade()
 
 def apply_style():
+    # CyUI sets every colour, size and rounding from the theme and the density.
+    import cyui
     native = raw()
-    {'dark': native.style_colors_dark, 'light': native.style_colors_light,
-     'classic': native.style_colors_classic}[preferences.values['theme']]()
+    test_theme = next((a.split('=', 1)[1] for a in sys.argv if a.startswith('--ui-test-theme=')), '')
+    cyui.apply(test_theme or preferences.values['theme'], preferences.values['density'], _dpi_scale())
     style = native.get_style()
     if hasattr(style, 'font_scale_main'): style.font_scale_main = preferences.values['font_scale']
     else: native.get_io().font_global_scale = preferences.values['font_scale']
+
+def _dpi_scale():
+    try:
+        from imgui_bundle import hello_imgui
+        return float(hello_imgui.dpi_window_size_factor()) or 1.0
+    except Exception:
+        return 1.0
 
 def license_records():
     manifest = read(APP/'CyTool.json', {})
@@ -393,8 +408,15 @@ def options_panel():
     native.text(tr('Interface preferences'))
     changed,index=native.combo(label('Language'),('en','fr').index(preferences.values['language']),['English','Français'])
     if changed: preferences.values['language']=('en','fr')[index]; preferences.save()
-    changed,index=native.combo(label('Theme'),('dark','light','classic').index(preferences.values['theme']),[tr('Dark'),tr('Light'),tr('Classic')])
-    if changed: preferences.values['theme']=('dark','light','classic')[index]; preferences.save(); apply_style()
+    import cyui
+    keys=[key for key,_,_,_ in cyui.THEMES]
+    changed,index=native.combo(label('Theme'),keys.index(preferences.values['theme']),[name for _,name,_,_ in cyui.THEMES])
+    if changed: preferences.values['theme']=keys[index]; preferences.save(); apply_style()
+    densities=list(cyui.DENSITIES)
+    changed,index=cyui.segmented('##density',[tr('Compact'),tr('Comfortable')],densities.index(preferences.values['density']))
+    if changed: preferences.values['density']=densities[index]; preferences.save(); apply_style()
+    native.same_line(native.get_style().window_padding.x+native.calc_item_width()+native.get_style().item_inner_spacing.x)
+    native.align_text_to_frame_padding(); native.text_unformatted(tr('Density'))
     changed,scale=native.slider_float(label('Text size'),preferences.values['font_scale'],.8,1.6,'%.2fx')
     if changed: preferences.values['font_scale']=scale; preferences.save(); apply_style()
     if native.button(label('Reset interface preferences')):
@@ -495,7 +517,14 @@ def run(runner):
         if _mesh_panel is not None:
             if _mesh_panel.test: runner.app_shall_exit=False
             _mesh_panel.check_test(runner)
-    runner.callbacks.show_gui=draw
+    def gui_with_notifications():
+        draw()
+        import cyui
+        cyui.render_notifications()
+    runner.callbacks.show_gui=gui_with_notifications
+    # CyUI's fonts (Segoe UI, Semibold, Consolas, with the Segoe MDL2 icons) replace ImGui's default font.
+    import cyui
+    runner.callbacks.load_additional_fonts=lambda: cyui.load_fonts(cyui._COMFORTABLE.font_size if preferences.values['density']=='comfortable' else 0.0)
     try: hello_imgui.run(runner)
     except Exception:
         import traceback

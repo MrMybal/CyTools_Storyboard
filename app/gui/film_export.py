@@ -10,6 +10,7 @@ import time
 
 from imgui_bundle import imgui as native
 
+import cyui
 from ui_common import imgui, tr
 from gui.common import dialogs, open_local
 from storyboard import h3film
@@ -31,6 +32,21 @@ TEMPLATES = [('continuityText', 'Carried opening frames ({frames}, {seconds})'),
              ('videoSoundText', 'Sound of a reference video ({n}, {video}, {name})')]
 OVERLAP_LABELS = {0: '0 - independent segments', 1: '1 frame', 5: '5 frames (0.2 s)', 22: '22 frames (0.9 s)',
                   39: '39 frames (1.6 s)', 56: '56 frames (2.3 s)', 73: '73 frames (3.0 s)'}
+
+
+def group(title):
+    """A titled group of a long form: a little space, a title, a line."""
+    cyui.space(8)
+    cyui.heading(title, 3)
+    cyui.divider(2)
+
+
+def hint(text):
+    """A faint explanation under a group, wrapped to the window."""
+    native.push_text_wrap_pos(0.0)
+    cyui.text_faint(text)
+    native.pop_text_wrap_pos()
+
 
 
 def depth_controls(o, key_suffix=''):
@@ -74,7 +90,7 @@ def depth_controls(o, key_suffix=''):
         if changed:
             o['controlBlur'] = blurs[index]
     native.push_text_wrap_pos(0.0)
-    native.text_disabled(tr('A control video along the camera move of each panel staged in 3D guides the generation '
+    hint(tr('A control video along the camera move of each panel staged in 3D guides the generation '
                             '(Fun ControlNet Union): the depth of the set, or the pose of the characters (OpenPose '
                             'skeletons, with their poses and moves). The blur applies to the depth only.'))
     native.pop_text_wrap_pos()
@@ -138,11 +154,12 @@ class FilmExportWindow:
 
     def _body(self):
         o = self.options
-        native.text_wrapped(tr('The panels of a sequence are grouped into H3 segments of about 20 s: H3 cuts between '
-                               'the shots of a segment itself, so characters, places and sound stay continuous. A '
-                               'segment may start a few frames before the previous one ends (crossfades by default). '
-                               'The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.'))
-        native.separator_text(tr('Segments'))
+        cyui.panel_header(tr('MiniMax H3 film'))
+        hint(tr('The panels of a sequence are grouped into H3 segments of about 20 s: H3 cuts between '
+                'the shots of a segment itself, so characters, places and sound stay continuous. A '
+                'segment may start a few frames before the previous one ends (crossfades by default). '
+                'The same film runs in CyTools_MiniMaxH3 (Colab) or in ComfyUI.'))
+        group(tr('Segments'))
         groupings = list(h3film.GROUPINGS)
         native.set_next_item_width(300)
         changed, index = native.combo(tr('Grouping') + '##grouping', groupings.index(o['grouping']),
@@ -158,9 +175,9 @@ class FilmExportWindow:
             native.same_line()
             native.set_next_item_width(110)
             _, o['maxShotsPerSegment'] = imgui.slider_int('Shots per segment (0 = any)', int(o['maxShotsPerSegment']), 0, 12)
-            native.text_disabled(tr('H3 was trained on segments of up to 15 s; longer ones work but motion and faces '
+            hint(tr('H3 was trained on segments of up to 15 s; longer ones work but motion and faces '
                                     'may drift. Fewer shots per segment follow the prompt more closely.'))
-        native.separator_text(tr('Picture'))
+        group(tr('Picture'))
         edges = list(h3film.SHORT_EDGES)
         native.set_next_item_width(120)
         index = edges.index(o['shortEdge']) if o['shortEdge'] in edges else edges.index(544)
@@ -175,7 +192,7 @@ class FilmExportWindow:
         _, o['height'] = imgui.input_int('Height', int(o['height']), 32)
         o['width'], o['height'] = max(0, o['width']), max(0, o['height'])
 
-        native.separator_text(tr('Continuity between segments'))
+        group(tr('Continuity between segments'))
         overlaps = list(h3film.OVERLAPS)
         native.set_next_item_width(220)
         changed, index = native.combo(tr('Overlap') + '##overlap', overlaps.index(int(o['overlapFrames'])),
@@ -186,9 +203,9 @@ class FilmExportWindow:
         _, o['overlapOnCuts'] = imgui.checkbox('Across cuts', bool(o['overlapOnCuts']))
         native.same_line()
         _, o['overlapOnFades'] = imgui.checkbox('Across fades to black', bool(o['overlapOnFades']))
-        native.text_disabled(tr('Crossfades always carry continuity. Without overlap, segments are generated independently.'))
+        hint(tr('Crossfades always carry continuity. Without overlap, segments are generated independently.'))
 
-        native.separator_text(tr('Pictures per segment (9 at most)'))
+        group(tr('Pictures per segment (9 at most)'))
         scopes = ['panel', 'film']
         native.set_next_item_width(330)
         changed, index = native.combo(tr('Character identity') + '##scope', scopes.index(o['identityScope']),
@@ -210,7 +227,7 @@ class FilmExportWindow:
         native.same_line()
         _, o['includeStyles'] = imgui.checkbox('Styles', bool(o['includeStyles']))
 
-        native.separator_text(tr('Videos and sounds per segment (3 of each, 12 references in all)'))
+        group(tr('Videos and sounds per segment (3 of each, 12 references in all)'))
         _, o['includeVideos'] = imgui.checkbox('Reference videos', bool(o['includeVideos']))
         native.same_line()
         _, o['includeVoices'] = imgui.checkbox('Character voices', bool(o['includeVoices']))
@@ -221,10 +238,10 @@ class FilmExportWindow:
         native.set_next_item_width(160)
         _, o['maxReferenceSeconds'] = imgui.slider_float('Longest reference (s)', float(o['maxReferenceSeconds']),
                                                          2.0, 15.0, '%.1f')
-        native.text_disabled(tr('Videos: library items of kind video used by the panel. Voices: an audio file in a '
+        hint(tr('Videos: library items of kind video used by the panel. Voices: an audio file in a '
                                 "character's files. Sounds: library items of kind audio used by the panel."))
 
-        native.separator_text(tr('Prompt'))
+        group(tr('Prompt'))
         _, o['includeStyle'] = imgui.checkbox('Project style', bool(o['includeStyle']))
         native.same_line()
         _, o['includeDescription'] = imgui.checkbox('Project description', bool(o['includeDescription']))
@@ -238,12 +255,12 @@ class FilmExportWindow:
             for key, label in TEMPLATES:
                 native.text(tr(label))
                 _, o[key] = imgui.input_text_multiline(f'##{key}', o[key], native.ImVec2(-1, 38))
-            if imgui.small_button('Default sentences'):
+            if cyui.ghost_button(tr('Default sentences')):
                 for key, _ in TEMPLATES:
                     o[key] = h3film.DEFAULTS[key]
             native.tree_pop()
 
-        native.separator_text(tr('Sampling'))
+        group(tr('Sampling'))
         _, o['secondPass'] = imgui.checkbox('Two-stage sampling (latent upscaler)', bool(o['secondPass']))
         if o['secondPass']:
             native.same_line()
@@ -257,51 +274,52 @@ class FilmExportWindow:
             native.set_next_item_width(-260)
             _, o['controlPatchModel'] = imgui.input_text('ControlNet file (ComfyUI workflow)', o['controlPatchModel'])
 
-        native.separator_text(tr('Where the film goes'))
+        group(tr('Where the film goes'))
         films = films_folder()
         target = h3film.films_folder_target(self.editor.board, films) if films else h3film.default_folder(self.editor.board)
         native.text(tr('Films folder') + ': ' + (films or tr('the project (exports/h3_film)')))
         native.same_line()
-        if imgui.small_button('Choose...'):
+        if cyui.icon_text_button(cyui.icon.folder, tr('Choose...')):
             dialogs.folder('films', 'Films folder (for example ComfyUI/input/cytools_film on your Drive)', films)
         chosen = dialogs.result('films')
         if chosen:
             set_films_folder(chosen[0])
         if films:
             native.same_line()
-            if imgui.small_button('Back to the project folder'):
+            if cyui.ghost_button(tr('Back to the project folder')):
                 set_films_folder('')
-        native.text_disabled(tr('This film') + ': ' + str(target) + '  -  ' + tr('in the ComfyUI workflow') + ': '
+        hint(tr('This film') + ': ' + str(target) + '  -  ' + tr('in the ComfyUI workflow') + ': '
                              + h3film.comfy_input_folder(target) + '/film.json')
 
         self._refresh()
-        native.separator()
+        group(tr('Segments of the film'))
         if self.error:
-            native.text_colored(native.ImVec4(1, .4, .35, 1), self.error)
+            cyui.callout('error', self.error)
         elif self.preview:
             self._table(*self.preview)
-        native.separator()
+        cyui.divider(6)
         native.begin_disabled(bool(self.error) or bool(self.editor.job and self.editor.job['state'] in ('Queued', 'Running')))
-        if imgui.button('Export the film'):
+        if cyui.primary_button((cyui.icon.export_file + '  ' if cyui.icons_available() else '') + tr('Export the film')
+                               + '###exportfilm'):
             params = {'project': str(self.editor.board.folder), 'options': dict(o)}
             if films:
                 params['folder'] = str(target)
             self.editor.submit('export_h3_film', params)
         native.end_disabled()
         native.same_line()
-        if imgui.button('Open the export folder'):
+        if cyui.icon_text_button(cyui.icon.folder, tr('Open the export folder'), 'ghost'):
             films = films_folder()
             folder = h3film.films_folder_target(self.editor.board, films) if films else h3film.default_folder(self.editor.board)
             open_local(folder if folder.exists() else self.editor.board.folder)
         native.same_line()
-        if imgui.button('Default options'):
+        if cyui.icon_text_button(cyui.icon.refresh, tr('Default options'), 'ghost'):
             self.options = dict(h3film.DEFAULTS)
 
     def _table(self, film, warnings):
         native.text(f'{len(film["segments"])} {tr("segments")} - {film["seconds"]:.2f} s ({film["frames"]} '
                     f'{tr("frames")}) - {film["width"]}x{film["height"]}')
         for warning in warnings:
-            native.text_colored(native.ImVec4(1, .7, .3, 1), warning)
+            cyui.callout('warning', warning)
         flags = native.TableFlags_.borders | native.TableFlags_.row_bg | native.TableFlags_.resizable
         if native.begin_table('h3filmsegments2', 10, flags):
             for label, width in (('#', 26), ('Panel', 180), ('Asked', 60), ('Real', 60), ('Frames', 110),
@@ -350,4 +368,4 @@ class FilmExportWindow:
                     native.text_disabled(segment['prompt'])
                     native.pop_text_wrap_pos()
             native.end_table()
-        native.text_disabled(tr('Click a row to read its prompt. Real durations follow the 5 + 17n frame grid of H3.'))
+        hint(tr('Click a row to read its prompt. Real durations follow the 5 + 17n frame grid of H3.'))

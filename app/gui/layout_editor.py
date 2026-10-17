@@ -15,6 +15,7 @@ import time
 import numpy as np
 from imgui_bundle import hello_imgui, imgui as native, imguizmo
 
+import cyui
 from ui_common import imgui, tr
 from gui.common import colour, dialogs, hex_colour
 from storyboard import layout, model, render3d
@@ -52,6 +53,20 @@ def set_hip_gearing(value):
     from ui_common import preferences
     preferences.values['hip_gearing'] = min(10, max(1, int(value)))
     preferences.save()
+
+
+def group(title):
+    """A titled group of the side panel."""
+    cyui.space(6)
+    cyui.section_title(title)
+    cyui.divider(2)
+
+
+def hint(text):
+    native.push_text_wrap_pos(0.0)
+    cyui.text_faint(text)
+    native.pop_text_wrap_pos()
+
 
 class RenderWorker:
     """Latest-request-wins rendering on a thread with its own GL context."""
@@ -276,11 +291,11 @@ class LayoutEditor:
                 if state['mode'] == '3d' and not state['stage'] and layout.stages(self.board):
                     state['stage'] = layout.stages(self.board)[0]['id']
         native.same_line()
-        if imgui.small_button('Edit the layout'):
+        if cyui.icon_text_button(cyui.icon.edit, tr('Edit the layout'), 'ghost'):
             self.editor.select_tab = 'Layout'
         if state['mode'] != 'image' and state.get('render'):
             native.push_text_wrap_pos(0.0)
-            native.text_disabled(tr('The layout picture is the panel image; it updates a second after a change.'))
+            hint(tr('The layout picture is the panel image; it updates a second after a change.'))
             native.pop_text_wrap_pos()
 
     # ------------------------------------------------------------------ tab
@@ -288,7 +303,7 @@ class LayoutEditor:
         board = self.board
         panel = self.panel()
         if not board or panel is None:
-            native.text_wrapped(tr('Select a panel in the Storyboard tab first.'))
+            cyui.empty_state(tr('No panel selected'), tr('Select a panel in the Storyboard tab first.'), cyui.icon.view)
             return
         self.apply_test()
         self.poll()
@@ -296,7 +311,7 @@ class LayoutEditor:
         panels = board.panels()
         ids = [p['id'] for p in panels]
         index = ids.index(panel['id'])
-        if imgui.small_button('<') and index:
+        if cyui.icon_button(cyui.icon.chevron_left, tr('Previous panel')) and index:
             self.editor.selected = ids[index - 1]
         native.same_line()
         native.set_next_item_width(260)
@@ -304,21 +319,21 @@ class LayoutEditor:
         if changed:
             self.editor.selected = ids[index]
         native.same_line()
-        if imgui.small_button('>') and index + 1 < len(ids):
+        if cyui.icon_button(cyui.icon.chevron_right, tr('Next panel')) and index + 1 < len(ids):
             self.editor.selected = ids[index + 1]
         native.same_line()
         self.summary(panel)
         if self.worker.error:
-            native.text_colored(native.ImVec4(1, .4, .35, 1), self.worker.error)
+            cyui.callout('error', self.worker.error)
         if self.message:
-            native.text_colored(native.ImVec4(1, .7, .35, 1), self.message)
+            cyui.callout('warning', self.message)
         state = layout.ensure(panel)
         if state['mode'] == '3d':
             self.draw_3d(panel, state)
         elif state['mode'] == '2d':
             self.draw_2d(panel, state)
         else:
-            native.text_wrapped(tr('This panel uses its imported images. Choose 2D drawing or 3D stage above to stage it.'))
+            cyui.callout('info', tr('This panel uses its imported images. Choose 2D drawing or 3D stage above to stage it.'))
 
     # ------------------------------------------------------------------ 3D
     def draw_3d(self, panel, state):
@@ -333,7 +348,7 @@ class LayoutEditor:
         if changed and stages:
             state['stage'] = stages[current]['id']
         native.same_line()
-        if imgui.small_button('New##stage'):
+        if cyui.icon_button(cyui.icon.add, tr('New stage')):
             new = layout.add_stage(board)
             state['stage'] = new['id']
         stage = None
@@ -343,20 +358,20 @@ class LayoutEditor:
             except StoryboardError:
                 state['stage'] = ''
         if stage is None:
-            native.text_wrapped(tr('Create a stage (New) to place shapes and cameras.'))
+            cyui.callout('info', tr('Create a stage (New) to place shapes and cameras.'))
             native.end_child()
             return
         native.set_next_item_width(-1)
         _, stage['name'] = imgui.input_text('##stagename', stage['name'])
         used_by = sum(1 for p in board.panels() if layout.ensure(p)['stage'] == stage['id'])
-        native.text_disabled(f'{tr("Used by")} {used_by} {tr("panels")}')
+        cyui.text_faint(f'{tr("Used by")} {used_by} {tr("panels")}')
         _, stage['ground'] = imgui.checkbox('Ground', bool(stage.get('ground', True)))
         native.same_line()
         value = colour(stage.get('sky', '#9aa7b8'))
         changed, picked = native.color_edit3(tr('Sky') + '##sky', [value.x, value.y, value.z], native.ColorEditFlags_.no_inputs)
         if changed:
             stage['sky'] = hex_colour(picked)
-        native.separator_text(tr('Add'))
+        group(tr('Add'))
         for position, (label, shape) in enumerate(SHAPE_BUTTONS):
             if position % 4:
                 native.same_line()
@@ -364,7 +379,7 @@ class LayoutEditor:
                 obj = layout.add_object(board, stage['id'], shape)
                 obj['position'][0], obj['position'][2] = float(self._view(stage).target[0]), float(self._view(stage).target[2])
                 self.selected_object = obj['id']
-        if imgui.small_button('Import a mesh...'):
+        if cyui.icon_text_button(cyui.icon.import_file, tr('Import a mesh...'), 'ghost'):
             dialogs.open('mesh', 'Import a mesh', MESH_FILTER)
         chosen = dialogs.result('mesh')
         if chosen:
@@ -373,14 +388,14 @@ class LayoutEditor:
                 self.selected_object = obj['id']
             except StoryboardError as exc:
                 self.message = str(exc)
-        native.separator_text(tr('Objects'))
+        group(tr('Objects'))
         overrides = state['overrides']
         for obj in stage['objects']:
             marker = ' *' if obj['id'] in overrides else ''
             if native.selectable(f'{obj["name"]} ({tr(obj["shape"])}){marker}##{obj["id"]}',
                                  self.selected_object == obj['id'])[0]:
                 self.selected_object = obj['id']
-        native.text_disabled(tr('* moved in this panel only'))
+        hint(tr('* moved in this panel only'))
         self.object_panel(stage, state)
         native.end_child()
         native.same_line()
@@ -403,7 +418,7 @@ class LayoutEditor:
         obj = next((o for o in stage['objects'] if o['id'] == self.selected_object), None)
         if obj is None:
             return
-        native.separator_text(tr('Selected object'))
+        group(tr('Selected object'))
         native.set_next_item_width(-1)
         _, obj['name'] = imgui.input_text('##objname', obj['name'])
         roles = list(layout.ROLES)
@@ -425,7 +440,7 @@ class LayoutEditor:
             obj['reference'] = ids[current]
             if ids[current] and obj['name'] in (obj['shape'].title(), ''):
                 obj['name'] = library[current - 1]['name']
-        native.text_disabled(tr('Reference: what this shape stands for.'))
+        hint(tr('Reference: what this shape stands for.'))
         _, self.panel_only = imgui.checkbox('Move in this panel only', self.panel_only)
         target = self._transform_target(obj, state, end=False)
         for key, speed in (('position', 0.02), ('rotation', 0.5), ('scale', 0.01)):
@@ -441,17 +456,17 @@ class LayoutEditor:
             layout.override_object(board, self.editor.selected, obj['id'], hidden=hidden)
         if obj['id'] in state['overrides'] and imgui.small_button('Back to the stage placement'):
             layout.clear_override(board, self.editor.selected, obj['id'])
-        if imgui.small_button('Duplicate##obj'):
+        if cyui.icon_text_button(cyui.icon.copy, tr('Duplicate') + '##obj', 'ghost'):
             self.selected_object = layout.duplicate_object(board, obj['id'])['id']
         native.same_line()
-        if imgui.small_button('Delete##obj'):
+        if cyui.button(tr('Delete') + '##obj', 'danger', small=True):
             layout.remove_object(board, obj['id'])
             self.selected_object = None
 
     def pose_panel(self, obj, state, override):
         """Pose of a character, its end pose and its move during the panel."""
         from storyboard import pose
-        native.separator_text(tr('Pose'))
+        group(tr('Pose'))
         library = pose.library_of(layout.poses(self.board))
         names = list(pose.NAMES) + list(library)
         labels = [tr(n) for n in pose.NAMES] + [library[i]['name'] for i in library]
@@ -492,7 +507,7 @@ class LayoutEditor:
                                                      0.02 if key == 'positionEnd' else 0.5)
                 if changed:
                     layout.override_object(self.board, self.editor.selected, obj['id'], **{key: values})
-            native.text_disabled(tr('A standing character that moves walks; use the Moment slider to watch it.'))
+            hint(tr('A standing character that moves walks; use the Moment slider to watch it.'))
 
     def _set_pose(self, obj, which, value):
         if which == 'pose' and not self.panel_only:
@@ -571,11 +586,11 @@ class LayoutEditor:
             _, walks = imgui.checkbox('Walks when the character moves', bool(entry.get('walks', True)))
             if walks != bool(entry.get('walks', True)):
                 layout.update_pose(self.board, entry['id'], walks=walks)
-            if imgui.small_button('Delete this project pose'):
+            if cyui.button(tr('Delete this project pose'), 'danger', small=True):
                 layout.remove_pose(self.board, entry['id'])
                 return
         else:
-            native.text_disabled(tr('A preset: moving a joint makes an editable copy of it for this project.'))
+            hint(tr('A preset: moving a joint makes an editable copy of it for this project.'))
         if edited:
             self._edit_pose(obj, which, name, edited)
 
@@ -806,7 +821,7 @@ class LayoutEditor:
         native.set_next_item_width(110)
         _, camera['roll'] = imgui.slider_float('Roll', float(camera.get('roll', 0.0)), -45.0, 45.0, '%.0f')
         native.same_line()
-        if imgui.small_button('Suggest the camera move'):
+        if cyui.icon_text_button(cyui.icon.lightbulb, tr('Suggest the camera move'), 'ghost'):
             suggestion = layout.suggest_camera(panel)
             panel['prompt'].update(suggestion)
             self.message = tr('Prompt camera set to: ') + ' '.join(v for v in suggestion.values() if v)
@@ -827,8 +842,8 @@ class LayoutEditor:
             if changed:
                 set_hip_gearing(value)
         native.same_line()
-        native.text_disabled(f'{self.moment * float(panel["duration"]):.1f} s / {float(panel["duration"]):.1f} s')
-        native.text_disabled(tr('Right drag: orbit - middle drag: pan - wheel: zoom - click: select - W/E/R: '
+        cyui.text_dim(f'{self.moment * float(panel["duration"]):.1f} s / {float(panel["duration"]):.1f} s')
+        hint(tr('Right drag: orbit - middle drag: pan - wheel: zoom - click: select - W/E/R: '
                                 'move/rotate/scale. With a shot camera selected, the gestures move that camera.'))
 
     def _current_camera(self, state, stage):
@@ -957,7 +972,7 @@ class LayoutEditor:
             drawing['background'] = hex_colour(picked)
         if self.selected_item is not None and self.selected_item < len(drawing['items']):
             item = drawing['items'][self.selected_item]
-            native.separator_text(tr('Selected element'))
+            group(tr('Selected element'))
             if item['type'] == 'text':
                 _, item['text'] = imgui.input_text('Text##text', item['text'])
             if item['type'] in ('text', 'figure'):
@@ -967,13 +982,13 @@ class LayoutEditor:
             changed, picked = native.color_edit3('##itemcolour', [itemc.x, itemc.y, itemc.z], native.ColorEditFlags_.no_inputs)
             if changed:
                 item['color'] = hex_colour(picked)
-            if imgui.small_button('Delete##item') or (native.is_key_pressed(native.Key.delete) and not native.get_io().want_text_input):
+            if cyui.button(tr('Delete') + '##item', 'danger', small=True) or (native.is_key_pressed(native.Key.delete) and not native.get_io().want_text_input):
                 drawing['items'].pop(self.selected_item)
                 self.selected_item = None
-        if imgui.small_button('Clear the drawing'):
+        if cyui.button(tr('Clear the drawing'), 'danger', small=True):
             drawing['items'] = []
             self.selected_item = None
-        native.text_disabled(tr('Figures stand on the point you click; arrows show movement.'))
+        hint(tr('Figures stand on the point you click; arrows show movement.'))
         native.end_child()
         native.same_line()
         native.begin_child('draw-canvas', native.ImVec2(0, avail.y), native.ChildFlags_.borders)
@@ -1082,5 +1097,5 @@ class LayoutEditor:
             xs, ys = [p.x for p in points], [p.y for p in points]
             wide = item['size'] * height if kind == 'figure' else 0
             draw.add_rect(native.ImVec2(min(xs) - 6 - wide, min(ys) - 6 - wide * 4),
-                          native.ImVec2(max(xs) + 6 + wide, max(ys) + 6), native.get_color_u32(native.ImVec4(1, .6, .1, 1)),
+                          native.ImVec2(max(xs) + 6 + wide, max(ys) + 6), cyui.palette().accent,
                           thickness=1.0)

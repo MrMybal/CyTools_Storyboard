@@ -59,6 +59,8 @@ keeps its full licence text in its own folder runtime/python/Lib/site-packages/<
 Nothing below is part of the download of the application. Each is fetched by the user from
 its official source when they install the image engine or a model, and keeps its own licence.
 
+- CyUI interface layer (app/cyui.py, vendored copy) - MIT, Copyright (c) 2026 Cyberalien -
+  LICENCES/CyUI-MIT.txt ; source: CyImgui_Interface (python/cyui.py), by the same author.
 - Image engine (runtime/engines/image): ComfyUI v0.38.0 - GNU GPL v3.0 -
   https://github.com/comfyanonymous/ComfyUI ; PyTorch - BSD-3-Clause - https://pytorch.org/
   and the dependencies listed in ComfyUI's requirements.txt.

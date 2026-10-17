@@ -1,1 +1,5 @@
-{"version": "0.2.0", "runtime_abi": "cp311-win_amd64", "repository": "MrMybal/CyTools_Storyboard"}
+{
+  "version": "0.2.1",
+  "runtime_abi": "cp311-win_amd64",
+  "repository": "MrMybal/CyTools_Storyboard"
+}

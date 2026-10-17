@@ -12,6 +12,7 @@ from pathlib import Path
 
 from imgui_bundle import imgui as native
 
+import cyui
 from ui_common import imgui, preferences, tr
 from gui.common import IMAGE_FILTER, dialogs, image, open_local
 from gui.jobs import Jobs
@@ -70,6 +71,7 @@ class ImagesTab:
         self.scroll_pictures = False
         self.control = False
         self.message = ''
+        self.message_tone = 'warning'
         self.test = '--ui-test-images' in sys.argv
 
     # ------------------------------------------------------------------ state
@@ -148,6 +150,7 @@ class ImagesTab:
             result['kept'] = imagegen.keep(board, result['file'], result, result.get('engine'))
             self.scroll_pictures = True        # show the picture that has just joined the item
             target = result.get('target') or {}
+            self.message_tone = 'success'
             if target.get('kind') == 'library':
                 self.message = tr('Added to the pictures of') + ' ' + board.library_item(target['item'])['name'] + '.'
             elif target.get('kind') == 'panel':
@@ -159,17 +162,26 @@ class ImagesTab:
     def draw(self):
         board = self.editor.board
         if not board:
-            native.text_wrapped(tr('Create a storyboard (New) or open one to start.'))
+            cyui.empty_state(tr('No storyboard open'), tr('Create one (+) or open one from the toolbar.'),
+                             cyui.icon.document)
             return
         o = self._options()
         self.jobs.poll()
         self._refresh_status()
+        if self.message:
+            cyui.notify(self.message, self.message_tone)
+            self.message, self.message_tone = '', 'warning'
+        if self.jobs.error:
+            cyui.notify(self.jobs.error[:400], 'error', 8.0)
+            self.jobs.error = ''
         avail = native.get_content_region_avail()
+        left, actions = cyui.dp(580), cyui.dp(118)
+        gap = native.get_style().item_spacing.y
         native.begin_group()
-        native.begin_child('img-left', native.ImVec2(560, avail.y - 150), native.ChildFlags_.borders)
+        native.begin_child('img-left', native.ImVec2(left, avail.y - actions - gap), native.ChildFlags_.borders)
         self._request_panel(o)
         native.end_child()
-        native.begin_child('img-actions', native.ImVec2(560, 0), native.ChildFlags_.borders)
+        native.begin_child('img-actions', native.ImVec2(left, 0), native.ChildFlags_.borders)
         self._actions(o)
         native.end_child()
         native.end_group()
@@ -181,16 +193,12 @@ class ImagesTab:
 
     def _request_panel(self, o):
         board = self.editor.board
-        native.text_wrapped(tr('Generate the pictures MiniMax H3 needs, from your reference pictures or from a text. '
-                               'The pictures you keep go into the project: a character or a place gets new reference '
-                               'pictures, a shot gets its first image.'))
-        for index, (_, label) in enumerate(RECIPES):
-            if index:
-                native.same_line()
-            if native.radio_button(tr(label) + f'##recipe{index}', self.recipe == index):
-                self.recipe = index
+        cyui.panel_header(tr('Pictures'), tr('Generate the pictures MiniMax H3 needs, from your reference pictures or from a '
+                                             'text. The pictures you keep go into the project.'))
+        cyui.space(6)
+        changed, self.recipe = cyui.segmented('##recipe', [tr(label) for _, label in RECIPES], self.recipe, -1)
+        cyui.space(6)
         recipe = RECIPES[self.recipe][0]
-        native.separator()
         if recipe in ('character', 'location'):
             self._item_combo(recipe)
             item = next((i for i in self._items(recipe) if i['id'] == self.item[recipe]), None)
@@ -199,26 +207,29 @@ class ImagesTab:
                 if imagegen.item_pictures(board, item, 1):
                     self._item_pictures(item, used)
                 else:
-                    native.text_colored(native.ImVec4(1, .75, .35, 1),
-                                        tr('No picture yet: the views are generated from the description alone.'))
-                native.text(tr('Description'))
-                _, item['description'] = imgui.input_text_multiline('##itemdesc', item.get('description', ''),
-                                                                    native.ImVec2(-1, 54))
-                if imgui.small_button('Add reference pictures...'):
+                    cyui.callout('info', tr('No picture yet: the views are generated from the description alone.'))
+                if cyui.begin_properties('##itemprops', 110):
+                    cyui.property(tr('Description'))
+                    _, item['description'] = imgui.input_text_multiline('##itemdesc', item.get('description', ''),
+                                                                        native.ImVec2(-1, cyui.dp(54)))
+                    if recipe == 'location':
+                        characters = self._items('character')
+                        names = [tr('nobody (empty place)')] + [c['name'] for c in characters]
+                        ids = [''] + [c['id'] for c in characters]
+                        cyui.property(tr('Character in the place'))
+                        index = ids.index(self.with_character) if self.with_character in ids else 0
+                        changed, index = native.combo('##withchar', index, names)
+                        if changed:
+                            self.with_character = ids[index]
+                    cyui.property(tr('Added to every picture'))
+                    _, self.extra = cyui.text_field('##extra', self.extra, tr('e.g. wet armour, night'), -1)
+                    cyui.end_properties()
+                if cyui.icon_text_button(cyui.icon.add, tr('Add reference pictures...'), 'ghost'):
                     dialogs.open('imgrefs' + item['id'], 'Reference pictures', IMAGE_FILTER, multiple=True)
                 for path in dialogs.result('imgrefs' + item['id']) or []:
                     relative = self.editor.act(board.import_asset, path)
                     if relative:
                         item.setdefault('files', []).append(relative)
-            if recipe == 'location':
-                characters = self._items('character')
-                names = [tr('nobody (empty place)')] + [c['name'] for c in characters]
-                ids = [''] + [c['id'] for c in characters]
-                native.set_next_item_width(300)
-                index = ids.index(self.with_character) if self.with_character in ids else 0
-                changed, index = native.combo(tr('Character in the place') + '##withchar', index, names)
-                if changed:
-                    self.with_character = ids[index]
             self._views(o, 'characterViews' if recipe == 'character' else 'locationViews')
         elif recipe == 'panel':
             try:
@@ -232,192 +243,200 @@ class ImagesTab:
             changed, index = native.combo('##imgpanel', index, names)
             if changed and panels:
                 self.editor.selected = panels[index]['id']
-            note(tr('The staging render gives the framing, the characters and the place of the shot '
-                    'give the look. The kept picture becomes the first image of the shot.'))
-            if panel is not None:
-                staged, unknown = imagegen.stage_figures(board, panel)
-                if unknown:
-                    characters = [c for c in self._items('character') if imagegen.item_pictures(board, c, 1)]
-                    ids = [''] + [c['id'] for c in characters]
-                    names = [tr('what the text describes')] + [c['name'] for c in characters]
-                    native.set_next_item_width(260)
-                    index = ids.index(self.extras) if self.extras in ids else 0
-                    changed, index = native.combo(f'{unknown} ' + tr('mannequin(s) without a reference are') + '##extras',
-                                                  index, names)
-                    if changed:
-                        self.extras = ids[index]
-            guides = list(imagegen.GUIDES)
-            labels = ['automatic (structure guide when its model is installed)', 'structure guide (depth or pose, ControlNet)',
-                      'staging picture', 'both', 'none (text and references only)']
-            native.set_next_item_width(380)
-            changed, index = native.combo(tr('Framing from the 3D staging') + '##guide', guides.index(o['panelGuide']),
-                                          [tr(x) for x in labels])
-            if changed:
-                o['panelGuide'] = guides[index]
-            if o['panelGuide'] in ('auto', 'control', 'both'):
-                if not self.control:
-                    native.text_colored(native.ImVec4(1, .75, .35, 1),
-                                        tr('The ControlNet of the model is not installed (Installation): the staging '
-                                           'picture is used instead.') if o['panelGuide'] == 'auto' else
-                                        tr('The ControlNet of the model is not installed (Installation).'))
-                sources = list(imagegen.CONTROL_SOURCES)
-                native.set_next_item_width(110)
-                changed, index = native.combo(tr('Guide') + '##ctlsrc', sources.index(o['panelControlSource']),
-                                              [tr(x) for x in sources])
+            cyui.text_faint(tr('The kept picture becomes the first image of the shot.'))
+            cyui.space(4)
+            if cyui.begin_properties('##shotprops', 150):
+                guides = list(imagegen.GUIDES)
+                labels = ['automatic (structure guide when its model is installed)', 'structure guide (depth or pose, ControlNet)',
+                          'staging picture', 'both', 'none (text and references only)']
+                cyui.property(tr('Framing from the 3D staging'),
+                              tr('Structure guide: the depth or the pose of the staging guides the picture, the model '
+                                 'never sees a mannequin. Staging picture: the mannequin render is sent as a picture.'))
+                changed, index = native.combo('##guide', guides.index(o['panelGuide']), [tr(x) for x in labels])
                 if changed:
-                    o['panelControlSource'] = sources[index]
-                native.same_line()
-                native.set_next_item_width(90)
-                _, o['panelControlStrength'] = imgui.slider_float('Strength##imgctl', float(o['panelControlStrength']),
-                                                                  0.05, 2.0, '%.2f')
-                native.same_line()
-                native.set_next_item_width(90)
-                _, o['panelControlEnd'] = imgui.slider_float('Until (share of the steps)##imgctl', float(o['panelControlEnd']),
-                                                             0.05, 1.0, '%.2f')
-            self._format_combo(o, 'panelFormat')
-            native.same_line()
-            native.set_next_item_width(90)
-            _, o['panelCharacterPictures'] = imgui.slider_int('Pictures per character', int(o['panelCharacterPictures']), 1, 6)
+                    o['panelGuide'] = guides[index]
+                if o['panelGuide'] in ('auto', 'control', 'both'):
+                    sources = list(imagegen.CONTROL_SOURCES)
+                    cyui.property(tr('Guide'))
+                    changed, index = cyui.segmented('##ctlsrc', [tr(x) for x in sources], sources.index(o['panelControlSource']), -1)
+                    if changed:
+                        o['panelControlSource'] = sources[index]
+                    cyui.property(tr('Strength##imgctl').split('##')[0])
+                    _, o['panelControlStrength'] = cyui.slider_bar('##ctlstrength', float(o['panelControlStrength']), 0.05, 2.0,
+                                                                   '%.2f', -1)
+                    cyui.property(tr('Until (share of the steps)##imgctl').split('##')[0])
+                    _, o['panelControlEnd'] = cyui.slider_bar('##ctlend', float(o['panelControlEnd']), 0.05, 1.0, '%.2f', -1)
+                if panel is not None:
+                    staged, unknown = imagegen.stage_figures(board, panel)
+                    if unknown:
+                        characters = [c for c in self._items('character') if imagegen.item_pictures(board, c, 1)]
+                        ids = [''] + [c['id'] for c in characters]
+                        names = [tr('what the text describes')] + [c['name'] for c in characters]
+                        cyui.property(f'{unknown} ' + tr('mannequin(s) without a reference are'))
+                        index = ids.index(self.extras) if self.extras in ids else 0
+                        changed, index = native.combo('##extras', index, names)
+                        if changed:
+                            self.extras = ids[index]
+                cyui.property(tr('Pictures per character'))
+                _, o['panelCharacterPictures'] = native.slider_int('##pcp', int(o['panelCharacterPictures']), 1, 6)
+                self._format_property(o, 'panelFormat')
+                cyui.property(tr('Added to every picture'))
+                _, self.extra = cyui.text_field('##extra', self.extra, '', -1)
+                cyui.end_properties()
+            if o['panelGuide'] in ('auto', 'control', 'both') and not self.control:
+                cyui.callout('warning', tr('The ControlNet of the model is not installed (Installation): the staging '
+                                           'picture is used instead.') if o['panelGuide'] == 'auto' else
+                             tr('The ControlNet of the model is not installed (Installation).'))
         else:
-            native.text(tr('Prompt'))
-            _, self.prompt = imgui.input_text_multiline('##freeprompt', self.prompt, native.ImVec2(-1, 110))
-            native.text(tr('Reference pictures (none: from the text alone)') + f'  -  {self.limit} max')
+            cyui.section_title(tr('Prompt'))
+            _, self.prompt = imgui.input_text_multiline('##freeprompt', self.prompt, native.ImVec2(-1, cyui.dp(110)))
+            cyui.section_title(tr('Reference pictures (none: from the text alone)') + f'  -  {self.limit} max')
             for position, path in enumerate(list(self.references)):
-                image(path, 90, 90, 256)
+                image(path, cyui.dp(90), cyui.dp(90), 256)
                 native.same_line()
-                if imgui.small_button(f'Remove##ref{position}'):
+                if cyui.icon_button(cyui.icon.close, tr('Remove') + f'##ref{position}'):
                     self.references.pop(position)
-            if len(self.references) < self.limit and imgui.small_button('Add pictures...'):
+                native.same_line()
+            native.new_line()
+            if len(self.references) < self.limit and cyui.icon_text_button(cyui.icon.add, tr('Add pictures...'), 'ghost'):
                 dialogs.open('freerefs', 'Reference pictures', IMAGE_FILTER, multiple=True)
             for path in dialogs.result('freerefs') or []:
                 if len(self.references) < self.limit:
                     self.references.append(path)
-            self._format_combo(o, 'freeFormat')
-        if recipe != 'free':
-            native.text(tr('Added to every picture'))
-            native.set_next_item_width(-1)
-            _, self.extra = imgui.input_text('##extra', self.extra)
+            if cyui.begin_properties('##freeprops', 110):
+                self._format_property(o, 'freeFormat')
+                cyui.end_properties()
 
-        native.separator_text(tr('Generation'))
-        native.set_next_item_width(90)
-        _, o['count'] = imgui.slider_int('Pictures per view', int(o['count']), 1, 8)
-        native.same_line()
-        sizes = list(imagegen.MEGAPIXELS)
-        native.set_next_item_width(110)
-        index = sizes.index(o['megapixels']) if o['megapixels'] in sizes else 2
-        changed, index = native.combo(tr('Size') + '##mp', index, [f'{m:g} MP' for m in sizes])
-        if changed:
-            o['megapixels'] = sizes[index]
-        _, o['randomSeed'] = imgui.checkbox('Random seed', bool(o['randomSeed']))
-        if not o['randomSeed']:
-            native.same_line()
-            native.set_next_item_width(160)
-            _, o['seed'] = imgui.input_int('Seed', int(o['seed']), 1)
-        _, o['fast'] = imgui.checkbox('Fast mode (few steps)', bool(o['fast']))
-        native.same_line()
-        native.set_next_item_width(90)
-        _, o['steps'] = imgui.slider_int('Steps (0 = auto)', int(o['steps']), 0, 50)
-        native.same_line()
-        native.set_next_item_width(90)
-        _, o['guidance'] = imgui.slider_float('Guidance (0 = auto)', float(o['guidance']), 0.0, 10.0, '%.1f')
-        _, o['includeStyle'] = imgui.checkbox('Project style in the prompt', bool(o['includeStyle']))
-        native.text(tr('Negative prompt'))
-        native.set_next_item_width(-1)
-        _, o['negative'] = imgui.input_text('##negative', o['negative'])
-        self._loras(o)
-        self._model_combos(o)
-        native.set_next_item_width(140)
-        _, o['keepLoadedMinutes'] = imgui.slider_int('Keep the model loaded (minutes, 0 = until closed)',
-                                                     int(o['keepLoadedMinutes']), 0, 240)
+        cyui.space(4)
+        if cyui.begin_section(tr('Generation') + '###sec-gen'):
+            if cyui.begin_properties('##genprops', 170):
+                cyui.property(tr('Pictures per view'))
+                _, o['count'] = native.slider_int('##count', int(o['count']), 1, 8)
+                cyui.property(tr('Size'))
+                sizes = list(imagegen.MEGAPIXELS)
+                index = sizes.index(o['megapixels']) if o['megapixels'] in sizes else 2
+                changed, index = native.combo('##mp', index, [f'{m:g} MP' for m in sizes])
+                if changed:
+                    o['megapixels'] = sizes[index]
+                cyui.property(tr('Random seed'))
+                _, o['randomSeed'] = cyui.toggle_switch('##randomseed', bool(o['randomSeed']))
+                if not o['randomSeed']:
+                    cyui.property(tr('Seed'))
+                    _, o['seed'] = native.input_int('##seed', int(o['seed']), 1)
+                cyui.property(tr('Fast mode (few steps)'), tr('Uses the few-step LoRA of the model when it has one.'))
+                _, o['fast'] = cyui.toggle_switch('##fast', bool(o['fast']))
+                cyui.property(tr('Steps (0 = auto)'))
+                _, o['steps'] = native.slider_int('##steps', int(o['steps']), 0, 50)
+                cyui.property(tr('Guidance (0 = auto)'))
+                _, o['guidance'] = cyui.slider_bar('##guidance', float(o['guidance']), 0.0, 10.0, '%.1f', -1)
+                cyui.property(tr('Project style in the prompt'))
+                _, o['includeStyle'] = cyui.toggle_switch('##style', bool(o['includeStyle']))
+                cyui.property(tr('Negative prompt'))
+                _, o['negative'] = cyui.text_field('##negative', o['negative'], '', -1)
+                self._model_properties(o)
+                cyui.property(tr('Keep the model loaded (minutes, 0 = until closed)'))
+                _, o['keepLoadedMinutes'] = native.slider_int('##keep', int(o['keepLoadedMinutes']), 0, 240)
+                cyui.end_properties()
+            cyui.end_section()
+        if cyui.begin_section('LoRA' + '###sec-lora', False):
+            self._loras(o)
+            cyui.end_section()
         requests = self.plan[0] if self.plan else []
-        if requests and native.tree_node(tr('What will be asked') + '###imgplan'):
+        if requests and cyui.begin_section(tr('What will be asked') + f' ({len(requests)})###imgplan', False):
             for request in requests:
-                native.bullet_text(f'{request["label"]}  -  {request["width"]}x{request["height"]}  -  '
-                                   f'{len(request["references"])} {tr("reference(s)")}')
+                cyui.text_dim(f'{request["label"]}  -  {request["width"]}x{request["height"]}  -  '
+                              f'{len(request["references"])} {tr("reference(s)")}')
                 native.push_text_wrap_pos(0.0)
-                native.text_disabled(request['prompt'])
+                cyui.text_faint(request['prompt'])
                 native.pop_text_wrap_pos()
-            native.tree_pop()
-        if native.tree_node(tr('Sentences') + '###imgsentences'):
+                cyui.space(4)
+            cyui.end_section()
+        if cyui.begin_section(tr('Sentences') + '###imgsentences', False):
             for key in imagegen.TEXTS:
-                native.text(tr(TEXT_LABELS[key]))
-                _, o[key] = imgui.input_text_multiline(f'##{key}', o[key], native.ImVec2(-1, 40))
-            if imgui.small_button('Default sentences##img'):
+                cyui.text_dim(tr(TEXT_LABELS[key]))
+                _, o[key] = imgui.input_text_multiline(f'##{key}', o[key], native.ImVec2(-1, cyui.dp(40)))
+            if cyui.ghost_button(tr('Default sentences##img')):
                 for key in imagegen.TEXTS:
                     o[key] = imagegen.DEFAULTS[key]
-            native.tree_pop()
+            cyui.end_section()
 
     def _actions(self, o):
         board = self.editor.board
         self._refresh_plan()
         requests, error = self.plan
-        if error:
-            native.text_colored(native.ImVec4(1, .6, .35, 1), error)
         running = self.jobs.running('generate_images')
-        native.begin_disabled(bool(error) or bool(running))
-        if imgui.button('Generate') or (self.test and self.editor.frames == 12 and not error):
-            self.generate()
-        native.end_disabled()
+        if error:
+            cyui.callout('warning', error)
+        with cyui.scoped_disabled(bool(error) or bool(running)):
+            label = (cyui.icon.photo + '  ' if cyui.icons_available() else '') + tr('Generate')
+            if cyui.primary_button(label + '###generate', (cyui.dp(170), native.get_frame_height() + cyui.dp(6))) or \
+                    (self.test and self.editor.frames == 12 and not error):
+                self.generate()
         native.same_line()
-        native.begin_disabled(bool(error))
-        if imgui.button('ComfyUI workflows...'):
-            recipe, arguments = self._arguments()
-            self.editor.save()
-            self.jobs.submit('export_image_workflows', {'project': str(board.folder), 'recipe': recipe,
-                                                        'options': copy.deepcopy(o), **arguments},
-                             lambda job: job['state'] == 'Completed' and open_local(job['outputs']['folder']),
-                             tr('ComfyUI workflows'))
-        native.end_disabled()
+        with cyui.scoped_disabled(bool(error)):
+            if cyui.icon_text_button(cyui.icon.export_file, tr('ComfyUI workflows...'), 'outline',
+                                     (0, native.get_frame_height() + cyui.dp(6))):
+                recipe, arguments = self._arguments()
+                self.editor.save()
+                self.jobs.submit('export_image_workflows', {'project': str(board.folder), 'recipe': recipe,
+                                                            'options': copy.deepcopy(o), **arguments},
+                                 lambda job: job['state'] == 'Completed' and open_local(job['outputs']['folder']),
+                                 tr('ComfyUI workflows'))
+            cyui.tooltip(tr('The same graph as a ComfyUI workflow, with its reference pictures'))
         if requests:
             native.same_line()
-            native.text_disabled(f'{len(requests) * int(o["count"])} {tr("picture(s)")}')
+            native.align_text_to_frame_padding()
+            cyui.badge(f'{len(requests) * int(o["count"])} {tr("picture(s)")}', 'accent')
         for job in running:
             progress = job.get('progress') or {}
-            native.progress_bar(float(progress.get('percent') or 0) / 100.0, native.ImVec2(-90, 0),
-                                self.jobs.progress_text(job)[:90])
+            cyui.progress_bar(float(progress.get('percent') or 0) / 100.0, (-native.get_frame_height() - cyui.dp(8), 0),
+                              self.jobs.progress_text(job)[:90])
             native.same_line()
-            if imgui.small_button('Cancel##gen'):
+            if cyui.icon_button(cyui.icon.stop, tr('Cancel') + ' (' + tr('the model stays loaded') + ')'):
                 self.jobs.cancel(job['jobId'])
-        if self.jobs.error:
-            native.text_colored(native.ImVec4(1, .45, .4, 1), self.jobs.error[:400])
-        if self.message:
-            native.text_colored(native.ImVec4(1, .7, .35, 1), self.message[:300])
 
     def _item_pictures(self, item, used):
         """Every picture of the item, the references first: the first `used` ones are sent to the model
         when its views are generated. A picture can be put first, or taken out of the item."""
         board = self.editor.board
+        p = cyui.palette()
         files = [f for f in item.get('files') or [] if (board.folder / f).suffix.lower() in model.IMAGE_SUFFIXES
                  and (board.folder / f).is_file()]
         generations = board.doc.get('generations') or {}
-        note(f'{len(files)} ' + tr('picture(s). The first ones are the references sent to the model') + f' ({min(used, len(files))}). '
-             + tr('"First" puts a picture at the head of the list; kept pictures are added at the end.'))
-        size = 92.0
-        columns = max(1, int(native.get_content_region_avail().x // (size + 10)))
-        native.begin_child('itempics' + item['id'], native.ImVec2(0, min(3, -(-len(files) // columns)) * (size + 48) + 8),
-                           native.ChildFlags_.borders)
+        cyui.section_title(f'{len(files)} ' + tr('picture(s). The first ones are the references sent to the model')
+                           + f' ({min(used, len(files))})')
+        cyui.help_marker(tr('"First" puts a picture at the head of the list; kept pictures are added at the end.'))
+        size = cyui.dp(92)
+        columns = max(1, int(native.get_content_region_avail().x // (size + cyui.dp(10))))
+        rows = min(3, -(-len(files) // columns))
+        with cyui.scoped_color(native.Col_.child_bg, p.bg0):
+            native.begin_child('itempics' + item['id'], native.ImVec2(0, rows * (size + cyui.dp(52)) + cyui.dp(10)),
+                               native.ChildFlags_.borders)
         for index, relative in enumerate(list(files)):
             if index % columns:
                 native.same_line()
             native.begin_group()
             native.push_id(f'pic{index}')
+            corner = native.get_cursor_screen_pos()
             drawn = image(board.folder / relative, size, size, 256)
             if not drawn[0]:
                 native.dummy(native.ImVec2(size, size))
-            key = (generations.get(Path(relative).name) or {}).get('key', '')
             if index < used:
-                native.text_colored(native.ImVec4(.5, .9, .5, 1), tr('reference') + (f' {index + 1}'))
-            else:
-                native.text_disabled((tr(key) if key else tr('picture'))[:13])
-            if index and imgui.small_button('First'):
+                native.get_window_draw_list().add_rect(corner, native.ImVec2(corner.x + drawn[0], corner.y + drawn[1]),
+                                                       p.accent, cyui.dp(3), cyui.dp(1.5))
+            key = (generations.get(Path(relative).name) or {}).get('key', '')
+            with cyui.scoped_font(None, 0.86):
+                if index < used:
+                    cyui.text_coloured(p.accent, tr('reference') + f' {index + 1}')
+                else:
+                    cyui.text_faint((tr(key) if key else tr('picture'))[:14])
+            if index and cyui.icon_button(cyui.icon.chevron_left, tr('First') + ' - ' + tr('make it a reference')):
                 item['files'].remove(relative)
                 item['files'].insert(0, relative)
             if index:
-                native.same_line()
-            if imgui.small_button('x'):
+                native.same_line(0, cyui.dp(2))
+            if cyui.icon_button(cyui.icon.close, tr('Take this picture out of the item (the file stays in the project)')):
                 item['files'].remove(relative)
-            if native.is_item_hovered():
-                native.set_tooltip(tr('Take this picture out of the item (the file stays in the project)'))
             native.pop_id()
             native.end_group()
         if self.scroll_pictures:
@@ -428,8 +447,7 @@ class ImagesTab:
     def _item_combo(self, kind):
         items = self._items(kind)
         if not items:
-            native.text_colored(native.ImVec4(1, .75, .35, 1), tr('The library has none yet: add one in the Storyboard tab '
-                                                                   '(References), with a description.'))
+            cyui.callout('info', tr('The library has none yet: add one in the Storyboard tab (References), with a description.'))
             return
         ids = [i['id'] for i in items]
         if self.item[kind] not in ids:
@@ -440,73 +458,78 @@ class ImagesTab:
             self.item[kind] = ids[index]
 
     def _views(self, o, name):
-        native.separator_text(tr('Views'))
+        on = sum(1 for view in o[name] if view.get('on', True))
+        if not cyui.begin_section(tr('Views') + f' ({on}/{len(o[name])})###views-{name}'):
+            return
         for index, view in enumerate(o[name]):
             native.push_id(f'{name}{index}')
             _, view['on'] = native.checkbox('##on', bool(view.get('on', True)))
             native.same_line()
-            native.set_next_item_width(76)
+            native.set_next_item_width(cyui.dp(80))
             formats = list(imagegen.FORMATS)
             current = formats.index(view.get('format', 'project')) if view.get('format', 'project') in formats else 0
             changed, current = native.combo('##fmt', current, [tr(f) for f in formats])
             if changed:
                 view['format'] = formats[current]
             native.same_line()
-            native.set_next_item_width(-1)
-            _, view['text'] = native.input_text('##text', view['text'])
+            with cyui.scoped_disabled(not view.get('on', True)):
+                native.set_next_item_width(-1)
+                _, view['text'] = native.input_text('##text', view['text'])
             native.pop_id()
-        if imgui.small_button(f'Add a view##{name}'):
+        if cyui.icon_text_button(cyui.icon.add, tr('Add a view') + f'##{name}', 'ghost'):
             o[name].append({'key': f'view{len(o[name]) + 1}', 'on': True, 'format': o[name][0].get('format', 'project'),
                             'text': ''})
         native.same_line()
-        if imgui.small_button(f'Default views##{name}'):
+        if cyui.ghost_button(tr('Default views') + f'##{name}'):
             o[name] = copy.deepcopy(imagegen.DEFAULTS[name])
+        cyui.end_section()
 
-    def _format_combo(self, o, key):
+    def _format_property(self, o, key):
         formats = list(imagegen.FORMATS)
-        native.set_next_item_width(140)
-        changed, index = native.combo(tr('Format') + '##' + key, formats.index(o[key]), [tr(f) for f in formats])
+        cyui.property(tr('Format'))
+        changed, index = native.combo('##' + key, formats.index(o[key]), [tr(f) for f in formats])
         if changed:
             o[key] = formats[index]
 
     def _loras(self, o):
         import shutil
         from storyboard import imageengine
-        native.separator_text('LoRA')
         if time.monotonic() - getattr(self, 'loras_at', 0.0) > 2.0:
             self.loras_at, self.lora_names = time.monotonic(), imageengine.lora_files()
         chosen = {entry['file']: entry for entry in o['loras']}
         for name in self.lora_names + [n for n in chosen if n not in self.lora_names]:
             native.push_id('lora' + name)
             entry = chosen.get(name)
-            changed, on = native.checkbox('##on', bool(entry and entry.get('on', True)))
+            changed, on = cyui.toggle_switch('##on', bool(entry and entry.get('on', True)))
             if changed:
                 if entry is None:
                     entry = {'file': name, 'strength': 1.0, 'on': True}
                     o['loras'].append(entry)
                 entry['on'] = on
             native.same_line()
-            native.set_next_item_width(110)
             strength = float(entry.get('strength', 1.0)) if entry else 1.0
-            changed, strength = native.slider_float('##strength', strength, -2.0, 2.0, '%.2f')
+            changed, strength = cyui.slider_bar('##strength', strength, -2.0, 2.0, '%.2f', cyui.dp(110))
             if changed:
                 if entry is None:
                     entry = {'file': name, 'strength': strength, 'on': False}
                     o['loras'].append(entry)
                 entry['strength'] = round(strength, 2)
             native.same_line()
+            native.align_text_to_frame_padding()
             if name in self.lora_names:
                 native.text(name)
             else:
-                native.text_colored(native.ImVec4(1, .5, .4, 1), name + '  - ' + tr('file not found'))
+                cyui.text_coloured(cyui.palette().error, name + '  - ' + tr('file not found'))
                 native.same_line()
-                if imgui.small_button('Forget'):
+                if cyui.ghost_button(tr('Forget')):
                     o['loras'].remove(entry)
             native.pop_id()
         if not self.lora_names and not chosen:
-            note(tr('No LoRA yet. A LoRA is made for one model (Qwen-Image 2.1, Qwen-Image-Edit 2511 or Qwen-Image 2512); '
-                    'its trigger words go in the prompt or in "Added to every picture".'))
-        if imgui.small_button('Add LoRA files...'):
+            native.push_text_wrap_pos(0.0)
+            cyui.text_faint(tr('No LoRA yet. A LoRA is made for one model (Qwen-Image 2.1, Qwen-Image-Edit 2511 or Qwen-Image 2512); '
+                               'its trigger words go in the prompt or in "Added to every picture".'))
+            native.pop_text_wrap_pos()
+        if cyui.icon_text_button(cyui.icon.add, tr('Add LoRA files...'), 'ghost'):
             dialogs.open('lorafiles', 'LoRA files', ['LoRA', '*.safetensors'], multiple=True)
         for path in dialogs.result('lorafiles') or []:
             try:
@@ -518,11 +541,11 @@ class ImagesTab:
             except OSError as exc:
                 self.message = str(exc)
         native.same_line()
-        if imgui.small_button('Open the LoRA folder'):
+        if cyui.icon_text_button(cyui.icon.folder, tr('Open the LoRA folder'), 'ghost'):
             imageengine.lora_folder().mkdir(parents=True, exist_ok=True)
             open_local(imageengine.lora_folder())
 
-    def _model_combos(self, o):
+    def _model_properties(self, o):
         models = (self.status or {}).get('models') or []
         for key, kind, label in (('model', 'edit', 'Model for pictures from references'),
                                  ('textModel', 'text', 'Model for pictures from a text')):
@@ -530,9 +553,9 @@ class ImagesTab:
             ids = [''] + [m['id'] for m in candidates]
             names = [tr('automatic (installed default)')] + \
                 [m['name'] + ('' if m['installed'] else '  - ' + tr('not installed')) for m in candidates]
-            native.set_next_item_width(330)
+            cyui.property(tr(label))
             index = ids.index(o[key]) if o[key] in ids else 0
-            changed, index = native.combo(tr(label) + '##' + key, index, names)
+            changed, index = native.combo('##' + key, index, names)
             if changed:
                 o[key] = ids[index]
 
@@ -542,158 +565,191 @@ class ImagesTab:
         engine = status.get('engine') or {}
         worker = status.get('worker') or {}
         last = status.get('last') or {}
+        p = cyui.palette()
         resident = ', '.join((worker.get('resident') or {}).get('models') or [])
+        cyui.begin_toolbar('##enginebar')
         if worker.get('alive'):
-            native.text_colored(native.ImVec4(.5, .9, .5, 1), tr('Model in memory') + (': ' + resident if resident else ''))
+            cyui.status_dot(p.success, tr('Model in memory'))
             native.same_line()
-            if imgui.small_button('Unload'):
+            native.align_text_to_frame_padding()
+            native.text(tr('Model in memory') + (': ' + resident if resident else ''))
+            native.same_line()
+            if cyui.icon_text_button(cyui.icon.power, tr('Unload'), 'ghost'):
                 self.jobs.submit('unload_image_model', {}, lambda job: self._refresh_status(force=True), tr('Unload'))
+            cyui.tooltip(tr('Give the memory of the model back now'))
         else:
-            native.text_disabled(tr('No model in memory (loaded at the first picture).'))
+            cyui.status_dot(p.textFaint)
+            native.same_line()
+            native.align_text_to_frame_padding()
+            cyui.text_dim(tr('No model in memory (loaded at the first picture).'))
         if last.get('secondsPerPicture'):
             native.same_line()
-            native.text_disabled(f'{last.get("device", "")}  -  {last["secondsPerPicture"]:.1f} s / {tr("picture")}'
-                                 + (f'  ({last["steps"]} {tr("steps")})' if last.get('steps') else ''))
+            cyui.toolbar_separator()
+            native.align_text_to_frame_padding()
+            cyui.text_faint(f'{last.get("device", "")}  -  {last["secondsPerPicture"]:.1f} s / {tr("picture")}'
+                            + (f'  ({last["steps"]} {tr("steps")})' if last.get('steps') else ''))
+        cyui.end_toolbar()
         if last.get('int8Kernels') is False:
-            native.text_colored(native.ImVec4(1, .7, .35, 1), tr('The engine did not find its CUDA kernels for int8 models: '
-                                                                 'pictures are slower. Repair the engine (Installation).'))
+            cyui.callout('warning', tr('The engine did not find its CUDA kernels for int8 models: pictures are slower. '
+                                       'Repair the engine (Installation).'))
         models = status.get('models') or []
         ready = engine.get('installed') and any(m['installed'] for m in models)
-        flags = 0 if ready and not self.test else native.TreeNodeFlags_.default_open
-        if native.collapsing_header(tr('Installation (engine and models)') + '###imginstall', flags):
+        if not ready:
+            cyui.callout('info', tr('Install the engine and a model below before generating.'))
+        if cyui.begin_section(tr('Installation (engine and models)') + '###imginstall', not ready or self.test):
             self._installation(engine, models)
-        native.separator()
+            cyui.end_section()
 
     def _installation(self, engine, models):
         jobs = self.jobs
-        colour = STATE_COLOUR['Installed'] if engine.get('installed') else STATE_COLOUR['NotInstalled']
-        native.text_colored(native.ImVec4(*colour), tr(engine.get('state', 'NotInstalled')))
+        p = cyui.palette()
+        cyui.begin_card('##enginecard', tr(engine.get('label', 'Image engine')))
+        native.align_text_to_frame_padding()
+        cyui.badge(tr(engine.get('state', 'NotInstalled')), 'success' if engine.get('installed') else 'warning')
         native.same_line()
-        native.text(tr(engine.get('label', 'Image engine'))
-                    + (f"  (torch {engine['torch']}, {engine['device']})" if engine.get('torch') else '')
-                    + f"  ~{gb(engine.get('estimatedBytes'))}")
-        note(tr('A private Python environment with PyTorch under runtime/engines/image, created at its '
-                'final path and checked by import before use.'))
+        cyui.text_dim((f"torch {engine['torch']}, {engine['device']}  -  " if engine.get('torch') else '')
+                      + f"~{gb(engine.get('estimatedBytes'))}")
+        native.push_text_wrap_pos(0.0)
+        cyui.text_faint(tr('A private Python environment with PyTorch under runtime/engines/image, created at its '
+                           'final path and checked by import before use.'))
+        native.pop_text_wrap_pos()
         running = jobs.running('install_image_engine')
-        native.begin_disabled(bool(running))
-        if imgui.button('Install or repair the engine (GPU)'):
-            jobs.submit('install_image_engine', {}, lambda job: self._refresh_status(force=True), tr('Image engine'))
-        native.end_disabled()
+        with cyui.scoped_disabled(bool(running)):
+            if cyui.icon_text_button(cyui.icon.repair, tr('Install or repair the engine (GPU)'),
+                                     'outline' if engine.get('installed') else 'primary'):
+                jobs.submit('install_image_engine', {}, lambda job: self._refresh_status(force=True), tr('Image engine'))
         for job in running:
-            native.progress_bar(0.5, native.ImVec2(-90, 0), jobs.progress_text(job)[:110])
+            cyui.progress_bar(-1.0, (-native.get_frame_height() - cyui.dp(8), 0), jobs.progress_text(job)[:110])
             native.same_line()
-            if imgui.small_button('Cancel##eng'):
+            if cyui.icon_button(cyui.icon.stop, tr('Cancel') + '##eng'):
                 jobs.cancel(job['jobId'])
-        native.separator_text(tr('Where the pictures are rendered'))
+        cyui.space(4)
+        cyui.section_title(tr('Where the pictures are rendered'))
         o = self.options
-        native.text(tr('Other ComfyUI (address, empty = this computer)'))
-        native.set_next_item_width(-1)
-        _, o['server'] = imgui.input_text('##imgserver', o['server'])
-        note(tr('Empty: the engine of this application, on this computer. An address (for example the '
-                'tunnel of a Colab ComfyUI): the same pictures are rendered there; its models must be '
-                'in its own folders.'))
-        native.separator_text(tr('Models'))
+        _, o['server'] = cyui.text_field('##imgserver', o['server'], tr('Other ComfyUI (address, empty = this computer)'), -1)
+        native.push_text_wrap_pos(0.0)
+        cyui.text_faint(tr('Empty: the engine of this application, on this computer. An address (for example the '
+                           'tunnel of a Colab ComfyUI): the same pictures are rendered there; its models must be '
+                           'in its own folders.'))
+        native.pop_text_wrap_pos()
+        cyui.end_card()
+        cyui.space(4)
+        cyui.section_title(tr('Models'))
         for entry in models:
             native.push_id(entry['id'])
-            colour = STATE_COLOUR.get(entry['state'], STATE_COLOUR['NotInstalled'])
-            native.text_colored(native.ImVec4(*colour), tr(entry['state']))
+            tone = {'Installed': 'success', 'Downloading': 'info', 'Verifying': 'info', 'Failed': 'error',
+                    'AccessRequired': 'error'}.get(entry['state'], 'warning' if entry['presentBytes'] else 'neutral')
+            cyui.begin_card('##model')
+            with cyui.scoped_font(cyui.bold_font(), 1.0):
+                native.text(entry['name'])
             native.same_line()
-            native.text(f"{entry['name']}  -  {gb(entry['downloadBytes'])}"
-                        + (f"  ({gb(entry['presentBytes'])} {tr('present')})" if 0 < entry['presentBytes'] < entry['downloadBytes'] else ''))
+            cyui.badge(tr(entry['state']), tone)
+            native.same_line()
+            cyui.text_faint(gb(entry['downloadBytes'])
+                            + (f"  ({gb(entry['presentBytes'])} {tr('present')})" if 0 < entry['presentBytes'] < entry['downloadBytes'] else ''))
             license_info = entry.get('license') or {}
-            note(f"{tr(entry.get('summary', ''))}  {tr('Licence')}: {license_info.get('name', '?')}"
-                 + (f"  -  VRAM ~{gb(entry['resources']['vramBytes'])}" if (entry.get('resources') or {}).get('vramBytes') else ''))
+            native.push_text_wrap_pos(0.0)
+            cyui.text_dim(tr(entry.get('summary', '')))
+            cyui.text_faint(f"{tr('Licence')}: {license_info.get('name', '?')}"
+                            + (f"  -  VRAM ~{gb(entry['resources']['vramBytes'])}" if (entry.get('resources') or {}).get('vramBytes') else ''))
+            native.pop_text_wrap_pos()
             if entry.get('error'):
-                native.text_colored(native.ImVec4(1, .45, .4, 1), str(entry['error'])[:300])
+                cyui.callout('error', str(entry['error'])[:300])
             active = [j for j in jobs.running('install_image_model', 'verify_image_model', 'remove_image_model')
                       if j['parameters'].get('model') == entry['id']]
             if active:
                 progress = active[0].get('progress') or {}
-                native.progress_bar(float(progress.get('percent') or 0) / 100.0, native.ImVec2(-90, 0),
-                                    jobs.progress_text(active[0])[:100])
+                cyui.progress_bar(float(progress.get('percent') or 0) / 100.0, (-native.get_frame_height() - cyui.dp(8), 0),
+                                  jobs.progress_text(active[0])[:100])
                 native.same_line()
-                if imgui.small_button('Cancel'):
+                if cyui.icon_button(cyui.icon.stop, tr('Cancel')):
                     jobs.cancel(active[0]['jobId'])
             else:
                 refresh = lambda job: self._refresh_status(force=True)  # noqa: E731
                 if entry['state'] in ('Downloading', 'Verifying'):
                     # no job of this window: another client (CLI, MCP) is installing it right now
                     progress = entry.get('progress') or {}
-                    native.text_disabled(tr('Being downloaded by another client')
-                                         + (f": {gb(progress.get('doneBytes'))} / {gb(progress.get('totalBytes'))}" if progress else ''))
+                    cyui.text_faint(tr('Being downloaded by another client')
+                                    + (f": {gb(progress.get('doneBytes'))} / {gb(progress.get('totalBytes'))}" if progress else ''))
                 elif not entry['installed']:
                     label = 'Repair' if entry['state'] in ('Failed', 'Partial') else \
                         'Resume' if entry['state'] in ('Interrupted', 'Cancelled') else 'Download'
-                    if imgui.small_button(label):
+                    if cyui.icon_text_button(cyui.icon.download, tr(label), 'outline'):
                         jobs.submit('install_image_model', {'model': entry['id'], 'accept_license': True,
                                                             'repair': entry['state'] in ('Failed', 'Partial')},
                                     refresh, tr('Download') + ' ' + entry['name'])
                     native.same_line()
                 if entry['presentBytes'] > 0:
-                    if imgui.small_button('Verify files'):
+                    if cyui.icon_button(cyui.icon.check, tr('Verify files')):
                         jobs.submit('verify_image_model', {'model': entry['id']}, refresh, tr('Verify files'))
-                    native.same_line()
-                    if imgui.small_button('Remove'):
+                    native.same_line(0, cyui.dp(2))
+                    if cyui.icon_button(cyui.icon.trash, tr('Remove')):
                         jobs.submit('remove_image_model', {'model': entry['id']}, refresh, tr('Remove'))
-                    native.same_line()
+                    native.same_line(0, cyui.dp(2))
                 url = (entry.get('source') or {}).get('url')
-                if url and imgui.small_button('Official page'):
+                if url and cyui.icon_button(cyui.icon.globe, tr('Official page')):
                     webbrowser.open(url)
-                elif not url:
-                    native.new_line()
+            cyui.end_card()
             native.pop_id()
 
     # ------------------------------------------------------------------ results
     def _results(self):
         if not self.results:
-            note(tr('The generated pictures appear here. Keep the ones you like: they are copied into '
-                    'the project with their recipe (prompt, references, seed), the others stay in the job folder.'))
+            cyui.empty_state(tr('No picture yet'), tr('Choose what to generate on the left, then Generate.'), cyui.icon.photo)
             return
         pending = [r for r in self.results if not r['kept']]
-        native.begin_disabled(not pending)
-        if imgui.button('Keep all'):
-            for result in pending:
-                self.keep(result)
-        native.end_disabled()
+        cyui.overline(tr('RESULTS'))
         native.same_line()
-        if imgui.button('Clear the list'):
+        cyui.badge(str(len(self.results)))
+        native.same_line()
+        with cyui.scoped_disabled(not pending):
+            if cyui.icon_text_button(cyui.icon.check, tr('Keep all'), 'ghost'):
+                for result in pending:
+                    self.keep(result)
+        native.same_line()
+        if cyui.icon_text_button(cyui.icon.close, tr('Clear the list'), 'ghost'):
             self.results = [r for r in self.results if False]
         size = float(preferences.values.get('image_thumb', 260))
         native.same_line()
-        native.set_next_item_width(140)
-        changed, size = imgui.slider_float('Thumbnails', size, 140.0, 520.0, '%.0f')
+        cyui.align_right(cyui.dp(150))
+        changed, size = cyui.slider_bar('##thumbs', size, 140.0, 520.0, tr('Thumbnails') + ' %.0f', cyui.dp(150))
         if changed:
             preferences.values['image_thumb'] = size
+        cyui.space(4)
         width = native.get_content_region_avail().x
-        columns = max(1, int(width // (size + 16)))
+        columns = max(1, int(width // (size + cyui.dp(16))))
+        p = cyui.palette()
         for index, result in enumerate(list(self.results)):
             if index % columns:
                 native.same_line()
             native.begin_group()
             native.push_id(f'res{result["id"]}{index}')
+            corner = native.get_cursor_screen_pos()
             drawn = image(result['file'], size, size, 768)
             if not drawn[0]:
                 native.dummy(native.ImVec2(size, size * 0.6))
+            elif result['kept']:
+                native.get_window_draw_list().add_rect(corner, native.ImVec2(corner.x + drawn[0], corner.y + drawn[1]),
+                                                       p.success, cyui.dp(3), cyui.dp(2))
             native.push_text_wrap_pos(native.get_cursor_pos().x + size)
             native.text(f'{result["label"]}' + (f' #{result["variant"]}' if result.get('variant', 1) > 1 else ''))
-            native.text_disabled(f'{result["width"]}x{result["height"]}  seed {result["seed"]}')
+            cyui.text_faint(f'{result["width"]}x{result["height"]}  seed {result["seed"]}')
             native.pop_text_wrap_pos()
             if result['kept']:
-                native.text_colored(native.ImVec4(.5, .9, .5, 1), tr('Kept in the project'))
+                cyui.badge(tr('Kept in the project'), 'success')
             else:
-                if imgui.small_button('Keep'):
+                if cyui.button(tr('Keep') + '##keep', 'primary', small=True):
                     self.keep(result)
-                native.same_line()
-                if imgui.small_button('Discard'):
+                native.same_line(0, cyui.dp(2))
+                if cyui.icon_button(cyui.icon.close, tr('Discard')):
                     self.results.remove(result)
-            native.same_line()
-            if imgui.small_button('Open'):
+            native.same_line(0, cyui.dp(2))
+            if cyui.icon_button(cyui.icon.open_file, tr('Open')):
                 open_local(result['file'])
-            native.same_line()
-            if imgui.small_button('Again'):
+            native.same_line(0, cyui.dp(2))
+            if cyui.icon_button(cyui.icon.refresh, tr('Use this seed for the next pictures'),
+                                not self.options['randomSeed'] and int(self.options['seed']) == int(result['seed'])):
                 self.options['randomSeed'] = False
                 self.options['seed'] = int(result['seed'])
-            if native.is_item_hovered():
-                native.set_tooltip(tr('Use this seed for the next pictures'))
             native.pop_id()
             native.end_group()

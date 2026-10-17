@@ -11,7 +11,7 @@ sys.path.insert(0, str(APP))
 from storyboard import h3film, h3workflow, imagegen, imagemodels, model  # noqa: E402
 from storyboard.pose import NAMES as POSES  # noqa: E402
 
-VERSION = '0.2.0'
+VERSION = '0.2.1'
 PROJECT = {'type': 'string', 'x-cy-kind': 'Directory', 'maxLength': 4096,
            'description': 'Project folder (.cystory) or its storyboard.json; a bare name is looked up in data/projects.'}
 FILE = {'type': 'string', 'x-cy-kind': 'File', 'maxLength': 4096,

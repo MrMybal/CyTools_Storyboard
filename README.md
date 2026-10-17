@@ -14,6 +14,12 @@ camera, then exported for **MiniMax H3** — as a film read by the
 [ComfyUI-CyTools-H3Film](https://github.com/MrMybal/ComfyUI-CyTools-H3Film) nodes, or as a
 workflow for CyTools_MiniMaxH3.
 
+## Version 0.2.1
+
+The desktop interface uses CyUI for the toolbar, reference library, board, inspector,
+Images and Layout pages, and export dialogs. Options adds five themes and compact or
+comfortable density. Existing projects, CLI and MCP operations remain compatible.
+
 ## What it does
 
 - **Board and timeline**: sequences of timed panels with drag and drop, duration handles,
@@ -129,6 +135,8 @@ projects in `data/projects` open in both versions.
 The application's own code is GPL-3.0-only — see [LICENSE](LICENSE). It runs on the
 [CyToolsCore](https://github.com/MrMybal/CyToolsCore) SDK 0.10.1, licensed under MIT
 ([LICENCES/CyToolsCore-MIT.txt](LICENCES/CyToolsCore-MIT.txt)).
+Its interface uses CyUI, a themed layer over Dear ImGui (MIT, vendored as `app/cyui.py`,
+[LICENCES/CyUI-MIT.txt](LICENCES/CyUI-MIT.txt)).
 [LICENCES/SOURCES.txt](LICENCES/SOURCES.txt) lists every component the application contains or
 downloads (Python packages of the portable build, FFmpeg, the image engine, the models), with its
 licence and source. Generated media and model weights are not part of this repository; each model

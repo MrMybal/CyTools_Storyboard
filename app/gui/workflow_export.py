@@ -10,6 +10,7 @@ import time
 
 from imgui_bundle import imgui as native
 
+import cyui
 from ui_common import imgui, tr
 from gui.common import open_local
 from gui.film_export import depth_controls
@@ -27,6 +28,21 @@ TEMPLATES = [('layoutText', 'Layout render ({n})'), ('sketchText', 'Sketch ({n})
              ('videoText', 'Reference video ({n}, {name}, {description})'),
              ('audioText', 'Reference sound ({n}, {name}, {description})'),
              ('continuedText', 'Next part of a long panel')]
+
+
+def group(title):
+    """A titled group of a long form: a little space, a title, a line."""
+    cyui.space(8)
+    cyui.heading(title, 3)
+    cyui.divider(2)
+
+
+def hint(text):
+    """A faint explanation under a group, wrapped to the window."""
+    native.push_text_wrap_pos(0.0)
+    cyui.text_faint(text)
+    native.pop_text_wrap_pos()
+
 
 
 class WorkflowExportWindow:
@@ -80,10 +96,11 @@ class WorkflowExportWindow:
 
     def _body(self):
         o = self.options
-        native.text_wrapped(tr('One MiniMax H3 generation per panel, with its own frames and references, then one '
-                               'edit with the storyboard transitions. Open workflow.json in CyTools_MiniMaxH3 '
-                               '(Workflows tab) to run it on the Colab GPU.'))
-        native.separator_text(tr('Picture and sampling'))
+        cyui.panel_header(tr('MiniMax H3 workflow'))
+        hint(tr('One MiniMax H3 generation per panel, with its own frames and references, then one '
+                'edit with the storyboard transitions. Open workflow.json in CyTools_MiniMaxH3 '
+                '(Workflows tab) to run it on the Colab GPU.'))
+        group(tr('Picture and sampling'))
         edges = list(h3workflow.SHORT_EDGES)
         self._combo('Short edge', 'shortEdge', edges, [f'{e} px' for e in edges], 120)
         native.same_line()
@@ -111,7 +128,7 @@ class WorkflowExportWindow:
 
         depth_controls(o, 'wf')
 
-        native.separator_text(tr('Shots'))
+        group(tr('Shots'))
         self._combo('Start on the previous shot\'s last frame', 'chain', list(h3workflow.CHAIN), CHAIN_LABELS, 230)
         native.same_line()
         self._combo('Layout render', 'layoutUse', LAYOUT_USES, LAYOUT_LABELS, 180)
@@ -121,7 +138,7 @@ class WorkflowExportWindow:
         native.same_line()
         _, o['exactDurations'] = imgui.checkbox('Trim to the panel durations', bool(o['exactDurations']))
 
-        native.separator_text(tr('References per shot'))
+        group(tr('References per shot'))
         self._combo('Character identity', 'identityScope', ['panel', 'film'],
                     ['characters the panel uses', 'every character, in every segment'], 300)
         for key, label in (('includeSketches', 'Sketches'), ('includeLocations', 'Locations'),
@@ -132,7 +149,7 @@ class WorkflowExportWindow:
             if key not in ('includeStyles', 'includeAudio'):
                 native.same_line()
 
-        native.separator_text(tr('Prompt'))
+        group(tr('Prompt'))
         self._combo('Prompt layout', 'promptLayout', PROMPT_LAYOUTS, PROMPT_LABELS, 400)
         native.same_line()
         _, o['includeStyle'] = imgui.checkbox('Project style', bool(o['includeStyle']))
@@ -142,28 +159,29 @@ class WorkflowExportWindow:
             for key, label in TEMPLATES:
                 native.text(tr(label))
                 _, o[key] = imgui.input_text_multiline(f'##wf{key}', o[key], native.ImVec2(-1, 38))
-            if imgui.small_button('Default sentences'):
+            if cyui.ghost_button(tr('Default sentences') + '##wf'):
                 for key, _ in TEMPLATES:
                     o[key] = h3workflow.DEFAULTS[key]
             native.tree_pop()
 
         self._refresh()
-        native.separator()
+        group(tr('Shots of the workflow'))
         if self.error:
-            native.text_colored(native.ImVec4(1, .4, .35, 1), self.error)
+            cyui.callout('error', self.error)
         elif self.preview:
             self._table(*self.preview)
-        native.separator()
+        cyui.divider(6)
         native.begin_disabled(bool(self.error) or bool(self.editor.job and self.editor.job['state'] in ('Queued', 'Running')))
-        if imgui.button('Convert to a workflow'):
+        if cyui.primary_button((cyui.icon.export_file + '  ' if cyui.icons_available() else '') + tr('Convert to a workflow')
+                               + '###convertwf'):
             self.editor.submit('export_h3_workflow', {'project': str(self.editor.board.folder), 'options': dict(o)})
         native.end_disabled()
         native.same_line()
-        if imgui.button('Open the export folder##wf'):
+        if cyui.icon_text_button(cyui.icon.folder, tr('Open the export folder') + '##wf', 'ghost'):
             folder = h3workflow.default_folder(self.editor.board)
             open_local(folder if folder.exists() else self.editor.board.folder)
         native.same_line()
-        if imgui.button('Default options##wf'):
+        if cyui.icon_text_button(cyui.icon.refresh, tr('Default options') + '##wf', 'ghost'):
             self.options = dict(h3workflow.DEFAULTS)
 
     def _table(self, summary, warnings):
@@ -171,7 +189,7 @@ class WorkflowExportWindow:
                     f'{summary["steps"]} {tr("workflow steps")} - {summary["seconds"]:.2f} s - '
                     f'{summary["width"]}x{summary["height"]}')
         for warning in warnings:
-            native.text_colored(native.ImVec4(1, .7, .3, 1), warning)
+            cyui.callout('warning', warning)
         flags = native.TableFlags_.borders | native.TableFlags_.row_bg | native.TableFlags_.resizable
         columns = (('#', 26), ('Panel', 170), ('Asked', 56), ('Generated', 76), ('Kept', 56), ('Generations', 80),
                    ('First frame', 100), ('Guides', 50), ('Pictures / videos / sounds', 150), ('Control', 60),
@@ -202,5 +220,5 @@ class WorkflowExportWindow:
                     native.text_disabled(shot['prompt'])
                     native.pop_text_wrap_pos()
             native.end_table()
-        native.text_disabled(tr('Click a row to read its prompt. H3 generates 4 to 15 s on a 5 + 17n frame grid; '
+        hint(tr('Click a row to read its prompt. H3 generates 4 to 15 s on a 5 + 17n frame grid; '
                                 'each shot is trimmed back to its panel duration.'))
