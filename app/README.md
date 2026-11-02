@@ -75,3 +75,9 @@ the interactive gestures (drag and drop, duration handles, paste) by a person.
 ## Application icon
 
 The logo source is assets/branding/logo.png. build_icon.ps1 derives the 16-256 px Windows ICO and assets/app_settings/icon.png for Hello ImGui. build_launcher.ps1 embeds the ICO in the launcher. branding.py selects assets independently of the working directory and assigns this Tool its own Windows taskbar identity.
+
+## Modular interface
+
+CyUI 1.2.0 provides the selected shared interface modules. See [integration and maintenance](Docs/CyUIMigration.md) for the module map, preserved application behavior and validation limits.
+
+CyUI: MIT ([upstream license](https://github.com/MrMybal/CyUI/blob/main/LICENSE)); the complete text is included in LICENCES/CyUI-MIT.txt.

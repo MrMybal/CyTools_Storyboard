@@ -615,68 +615,9 @@ class Editor:
 
     # ------------------------------------------------------------------ timeline
     def timeline(self):
-        board = self.board
-        p = cyui.palette()
-        rows = {row['id']: row for row in board.timeline()}
-        total = board.total_duration()
-        cyui.overline(tr('TIMELINE'))
-        native.same_line()
-        native.set_next_item_width(cyui.dp(150))
-        _, self.px_per_second = cyui.slider_bar('##tlzoom', self.px_per_second, 5.0, 200.0, '%.0f px/s')
-        cyui.tooltip(tr('Timeline zoom'))
-        native.same_line()
-        cyui.text_faint(tr('Drag the right edge of a panel to change its duration.'))
-        native.begin_child('timeline-strip', native.ImVec2(0, 0), native.ChildFlags_.none,
-                           native.WindowFlags_.horizontal_scrollbar)
-        origin = native.get_cursor_screen_pos()
-        draw = native.get_window_draw_list()
-        scale = self.px_per_second
-        step = 1 if scale > 30 else 5 if scale > 8 else 10
-        block = cyui.dp(46)
-        top = origin.y + cyui.dp(18)
-        draw.add_rect_filled(native.ImVec2(origin.x, top - cyui.dp(2)),
-                             native.ImVec2(origin.x + max(total * scale + 40, native.get_content_region_avail().x), top + block + cyui.dp(2)),
-                             p.bg0, cyui.dp(4))
-        for second in range(0, int(total) + 2, step):
-            x = origin.x + second * scale
-            major = second % (step * 5) == 0
-            draw.add_line(native.ImVec2(x, origin.y + cyui.dp(6)), native.ImVec2(x, origin.y + cyui.dp(14)),
-                          p.textDim if major else p.textFaint)
-            draw.add_text(native.ImVec2(x + cyui.dp(3), origin.y), p.textFaint, f'{second}s')
-        for number, panel in enumerate(board.panels(), start=1):
-            row = rows[panel['id']]
-            x0, x1 = origin.x + row['start'] * scale, origin.x + row['end'] * scale
-            base = native.get_color_u32(colour(panel['color'])) if panel.get('color') else p.bg4
-            selected = panel['id'] == self.selected
-            fill = cyui.mix(base, p.accent, 0.35) if selected else base
-            draw.add_rect_filled(native.ImVec2(x0, top), native.ImVec2(x1 - 1, top + block), fill, cyui.dp(4))
-            if selected:
-                draw.add_rect(native.ImVec2(x0, top), native.ImVec2(x1 - 1, top + block), p.accent, cyui.dp(4), cyui.dp(1.5))
-            ink = cyui.contrast_text(fill)
-            cyui.clipped_text(draw, native.ImVec2(x0 + cyui.dp(5), top + cyui.dp(5)), x1 - x0 - cyui.dp(10), ink,
-                              f'{number}. {panel["title"]}')
-            cyui.clipped_text(draw, native.ImVec2(x0 + cyui.dp(5), top + cyui.dp(25)), x1 - x0 - cyui.dp(10),
-                              cyui.alpha(ink, 0.7), f'{panel["duration"]:.1f}s')
-            native.set_cursor_screen_pos(native.ImVec2(x0, top))
-            native.invisible_button('tl' + panel['id'], native.ImVec2(max(4, x1 - x0 - 8), block))
-            if native.is_item_clicked():
-                self.selected = panel['id']
-            native.set_cursor_screen_pos(native.ImVec2(x1 - 8, top))
-            native.invisible_button('edge' + panel['id'], native.ImVec2(8, block))
-            if native.is_item_hovered() or native.is_item_active():
-                native.set_mouse_cursor(native.MouseCursor_.resize_ew)
-                draw.add_line(native.ImVec2(x1 - 2, top + cyui.dp(6)), native.ImVec2(x1 - 2, top + block - cyui.dp(6)),
-                              p.accent, cyui.dp(2))
-            if native.is_item_active() and native.is_mouse_dragging(0):
-                delta = native.get_io().mouse_delta.x / scale
-                panel['duration'] = round(max(0.1, min(600.0, panel['duration'] + delta)), 2)
-        if self.play:
-            elapsed = self.play_time()
-            x = origin.x + elapsed * scale
-            draw.add_line(native.ImVec2(x, origin.y), native.ImVec2(x, top + block + cyui.dp(4)), p.accent, cyui.dp(2))
-        native.set_cursor_screen_pos(native.ImVec2(origin.x, top + block + cyui.dp(6)))
-        native.dummy(native.ImVec2(max(total * scale + 40, 10), 1))
-        native.end_child()
+        from .modular_views import TimelineView
+        if not hasattr(self,'_timeline_view'):self._timeline_view=TimelineView()
+        self._timeline_view.draw(self)
 
     # ------------------------------------------------------------------ inspector
     def inspector(self):
@@ -693,22 +634,14 @@ class Editor:
         number = [p['id'] for p in board.panels()].index(panel['id']) + 1
         cyui.panel_header(f'{tr("Panel")} {number}', sequence['title'])
         cyui.space(4)
-        if cyui.begin_properties('##panelprops', 90):
-            cyui.property(tr('Title'))
-            _, panel['title'] = imgui.input_text('##title', panel['title'])
-            cyui.property(tr('Duration'), tr('Seconds on screen; the presets set it at once.'))
-            native.set_next_item_width(cyui.dp(80))
-            changed, duration = imgui.drag_float('##duration', panel['duration'], 0.05, 0.1, 600.0, '%.2f s')
-            if changed:
-                panel['duration'] = round(max(0.1, duration), 2)
-            for preset in (4, 5, 8, 10, 15):
-                native.same_line(0, cyui.dp(2))
-                if cyui.button(f'{preset}s##dur{preset}', 'primary' if panel['duration'] == preset else 'ghost', small=True):
-                    panel['duration'] = float(preset)
-            cyui.property(tr('Status'))
-            index = model.STATUSES.index(panel['status'])
-            _, index = imgui.combo('##status', index, list(model.STATUSES))
-            panel['status'] = model.STATUSES[index]
+        from .modular_views import PanelInspector, transaction
+        if not hasattr(self,'_panel_inspector'):self._panel_inspector=PanelInspector()
+        self._panel_inspector.draw(self,panel)
+        for preset in (4,5,8,10,15):
+            if preset!=4:native.same_line(0,cyui.dp(2))
+            if cyui.button(f'{preset}s##dur{preset}','primary' if panel['duration']==preset else 'ghost',small=True):
+                transaction(self,lambda:panel.update(duration=float(preset)))
+        if cyui.begin_properties('##panelprops',90):
             cyui.property(tr('Colour'))
             value = colour(panel.get('color') or '#34507a')
             changed, picked = native.color_edit3('##colour', [value.x, value.y, value.z], native.ColorEditFlags_.no_inputs)
@@ -966,7 +899,7 @@ class Editor:
         if time.monotonic() - self._issues_at > 1.0:
             self.issues, self._issues_at = self.board.validate(), time.monotonic()
         avail = native.get_content_region_avail()
-        side, inspector, strip = cyui.dp(270), cyui.dp(460), cyui.dp(124)
+        side, inspector, strip = cyui.dp(270), cyui.dp(460), cyui.dp(160)
         gap = native.get_style().item_spacing.x
         native.begin_child('library', native.ImVec2(side, avail.y - strip - gap), native.ChildFlags_.borders)
         self.library()

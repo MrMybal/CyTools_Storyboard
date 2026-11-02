@@ -154,3 +154,9 @@ licence and source. Generated media and model weights are not part of this repos
 follows its own licence.
 
 Maintained by Cyberalien.
+
+## Modular interface
+
+CyUI 1.2.0 provides the selected shared interface modules. See [integration and maintenance](app/Docs/CyUIMigration.md) for the module map, preserved application behavior and validation limits.
+
+CyUI: MIT ([upstream license](https://github.com/MrMybal/CyUI/blob/main/LICENSE)); the complete text is included in LICENCES/CyUI-MIT.txt.

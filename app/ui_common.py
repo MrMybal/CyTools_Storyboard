@@ -35,8 +35,8 @@ class Preferences:
         if self.values['language'] not in ('en', 'fr'): self.values['language'] = 'en'
         import cyui
         theme = OLD_THEMES.get(self.values['theme'], self.values['theme'])
-        self.values['theme'] = theme if any(theme == key for key, _, _, _ in cyui.THEMES) else cyui.DEFAULT_THEME
-        if self.values['density'] not in cyui.DENSITIES: self.values['density'] = 'comfortable'
+        self.values['theme'] = theme if any(theme == key for key, _, _, _ in cyui.THEMES) else 'mid-grey'
+        if self.values['density'] not in ('compact','comfortable'): self.values['density'] = 'comfortable'
         if not isinstance(self.values.get('autosave_generation'),bool): self.values['autosave_generation']=False
         try: self.values['font_scale'] = min(1.6, max(.8, float(self.values['font_scale'])))
         except (TypeError, ValueError): self.values['font_scale'] = 1.0
@@ -48,6 +48,8 @@ class Preferences:
 
 preferences = Preferences()
 catalog = read(APP/'locales/ui.json', {})
+from cyui_modules.locale import register_translations
+register_translations('fr',{key:value['fr'] for key,value in catalog.items() if isinstance(value,dict) and isinstance(value.get('fr'),str)})
 def normalized(text):
     return ''.join(c for c in unicodedata.normalize('NFKD',text) if not unicodedata.combining(c)).replace('’',"'").casefold()
 _normalized = {normalized(k):v for k,v in catalog.items()}
@@ -275,6 +277,8 @@ def raw():
 def tr(text):
     if not isinstance(text, str) or not text: return text
     language = preferences.values['language']
+    from cyui_modules.locale import set_locale
+    set_locale(language)
     translation = catalog.get(text) or _normalized.get(normalized(text))
     if translation: return translation.get(language, translation.get('en', text))
     # Only registered display fragments are substituted. No remote translator,
@@ -412,7 +416,7 @@ def options_panel():
     keys=[key for key,_,_,_ in cyui.THEMES]
     changed,index=native.combo(label('Theme'),keys.index(preferences.values['theme']),[name for _,name,_,_ in cyui.THEMES])
     if changed: preferences.values['theme']=keys[index]; preferences.save(); apply_style()
-    densities=list(cyui.DENSITIES)
+    densities=list(('compact','comfortable'))
     changed,index=cyui.segmented('##density',[tr('Compact'),tr('Comfortable')],densities.index(preferences.values['density']))
     if changed: preferences.values['density']=densities[index]; preferences.save(); apply_style()
     native.same_line(native.get_style().window_padding.x+native.calc_item_width()+native.get_style().item_inner_spacing.x)
@@ -524,7 +528,7 @@ def run(runner):
     runner.callbacks.show_gui=gui_with_notifications
     # CyUI's fonts (Segoe UI, Semibold, Consolas, with the Segoe MDL2 icons) replace ImGui's default font.
     import cyui
-    runner.callbacks.load_additional_fonts=lambda: cyui.load_fonts(cyui._COMFORTABLE.font_size if preferences.values['density']=='comfortable' else 0.0)
+    runner.callbacks.load_additional_fonts=lambda: cyui.load_fonts(16.0 if preferences.values['density']=='comfortable' else 0.0)
     try: hello_imgui.run(runner)
     except Exception:
         import traceback

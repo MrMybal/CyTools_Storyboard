@@ -76,3 +76,10 @@ its official source when they install the image engine or a model, and keeps its
   License - https://huggingface.co/Comfy-Org/MiniMax-H3
 
 The MIT licence of the SDK does not change the licences of these components or models.
+
+CyUI 1.2.0 (MIT)
+Repository: https://github.com/MrMybal/CyUI
+License: https://github.com/MrMybal/CyUI/blob/main/LICENSE
+Full text: LICENCES/CyUI-MIT.txt
+Revision: 8367401fe45fc22bfed5e227cb3de343177f676b
+Selected file hashes: app/cyui-source.json

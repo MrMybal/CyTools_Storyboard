@@ -16,6 +16,9 @@ import numpy as np
 from imgui_bundle import hello_imgui, imgui as native, imguizmo
 
 import cyui
+from cyui_modules.viewport import ViewportState, viewport as scene_viewport
+from cyui_modules.images import ImageData
+from cyui_modules.canvas import Canvas, CanvasState
 from ui_common import imgui, tr
 from gui.common import colour, dialogs, hex_colour
 from storyboard import layout, model, render3d
@@ -889,10 +892,14 @@ class LayoutEditor:
             self.texture_key = result[0]
             self.ids = result[2]
         origin = native.get_cursor_screen_pos()
+        if not hasattr(self,'_surface_state'):self._surface_state=ViewportState()
         if self.texture is not None:
-            native.image(native.ImTextureRef(self.texture.texture_id()), native.ImVec2(self.texture.width, self.texture.height))
+            scene_viewport('##stage-surface',self._surface_state,
+                           ImageData(self.texture.texture_id(),self.texture.width,self.texture.height),
+                           (self.texture.width,self.texture.height),navigation=False)
         else:
-            native.dummy(native.ImVec2(width, height))
+            scene_viewport('##stage-surface',self._surface_state,ImageData(),
+                           (width,height),navigation=False)
         hovered = native.is_item_hovered()
         io = native.get_io()
         # Gizmo on the selected object, with the matrices the image was rendered with.
@@ -992,52 +999,58 @@ class LayoutEditor:
         native.end_child()
         native.same_line()
         native.begin_child('draw-canvas', native.ImVec2(0, avail.y), native.ChildFlags_.borders)
-        size = layout.render_size(self.board)
-        area = native.get_content_region_avail()
-        scale = min(area.x / size[0], (area.y - 4) / size[1])
-        width, height = size[0] * scale, size[1] * scale
-        origin = native.get_cursor_screen_pos()
-        native.invisible_button('canvas', native.ImVec2(max(width, 1), max(height, 1)), native.ButtonFlags_.mouse_button_left)
-        draw = native.get_window_draw_list()
-        draw.add_rect_filled(origin, native.ImVec2(origin.x + width, origin.y + height),
-                             native.get_color_u32(colour(drawing.get('background', '#e9e6df'))))
-        to_screen = lambda p: native.ImVec2(origin.x + p[0] * width, origin.y + p[1] * height)  # noqa: E731
-        mouse = native.get_io().mouse_pos
-        point = [min(1, max(0, (mouse.x - origin.x) / width)), min(1, max(0, (mouse.y - origin.y) / height))]
-        for index, item in enumerate(drawing['items']):
-            self._draw_item(draw, item, to_screen, width, height, index == self.selected_item)
-        if self.stroke:
-            self._draw_item(draw, self.stroke, to_screen, width, height, False)
-        tool = TOOLS[self.tool]
-        if native.is_item_activated():
-            if tool == 'select':
-                self.selected_item = self._hit(drawing['items'], point)
-                self.drag_origin = point
-            elif tool in ('figure', 'text'):
-                drawing['items'].append({'type': tool, 'points': [point], 'color': hex_colour(self.draw_colour),
-                                         'width': self.draw_width, 'fill': False,
-                                         'text': 'Text' if tool == 'text' else '', 'size': 0.06 if tool == 'text' else 0.08})
-                self.selected_item = len(drawing['items']) - 1
-            else:
-                self.stroke = {'type': tool, 'points': [point, point], 'color': hex_colour(self.draw_colour),
-                               'width': self.draw_width, 'fill': self.draw_fill, 'text': '', 'size': 0.05}
-        if native.is_item_active():
+        size=layout.render_size(self.board)
+        area=native.get_content_region_avail()
+        key=(str(self.board.folder),panel['id'],tuple(size))
+        if getattr(self,'_drawing_key',None)!=key:
+            self._drawing_key=key;self._drawing_canvas=CanvasState()
+            self._drawing_canvas.view.fit((0,0),size,(max(1,area.x),max(1,area.y-4)),0)
+        with Canvas('canvas',self._drawing_canvas,(area.x,max(1,area.y-4)),False) as surface:
+            if surface.hovered and native.is_mouse_double_clicked(0):
+                self._drawing_canvas.view.fit((0,0),size,surface.size,0)
+            view=surface.state.view
+            width,height=size[0]*view.zoom,size[1]*view.zoom
+            origin=native.ImVec2(*view.screen((0,0),surface.top))
+            draw=surface.draw
+            draw.add_rect_filled(origin,native.ImVec2(origin.x+width,origin.y+height),
+                                 native.get_color_u32(colour(drawing.get('background','#e9e6df'))))
+            to_screen=lambda point:native.ImVec2(*view.screen((point[0]*size[0],point[1]*size[1]),surface.top))
+            point=[min(1,max(0,surface.mouse[n]/size[n])) for n in (0,1)]
+            inside=0<=surface.mouse[0]<=size[0] and 0<=surface.mouse[1]<=size[1]
+            for index, item in enumerate(drawing['items']):
+                self._draw_item(draw, item, to_screen, width, height, index == self.selected_item)
             if self.stroke:
-                if tool == 'stroke':
-                    if math.dist(self.stroke['points'][-1], point) > 0.004:
-                        self.stroke['points'].append(point)
+                self._draw_item(draw, self.stroke, to_screen, width, height, False)
+            tool = TOOLS[self.tool]
+            if native.is_item_activated() and not surface.state.panning and inside:
+                if tool == 'select':
+                    self.selected_item = self._hit(drawing['items'], point)
+                    self.drag_origin = point
+                elif tool in ('figure', 'text'):
+                    drawing['items'].append({'type': tool, 'points': [point], 'color': hex_colour(self.draw_colour),
+                                             'width': self.draw_width, 'fill': False,
+                                             'text': 'Text' if tool == 'text' else '', 'size': 0.06 if tool == 'text' else 0.08})
+                    self.selected_item = len(drawing['items']) - 1
                 else:
-                    self.stroke['points'][-1] = point
-            elif tool == 'select' and self.selected_item is not None and self.drag_origin:
-                dx, dy = point[0] - self.drag_origin[0], point[1] - self.drag_origin[1]
-                item = drawing['items'][self.selected_item]
-                item['points'] = [[x + dx, y + dy] for x, y in item['points']]
-                self.drag_origin = point
-        if native.is_item_deactivated() and self.stroke:
-            if len(self.stroke['points']) >= 2 and math.dist(self.stroke['points'][0], self.stroke['points'][-1]) > 0.005:
-                drawing['items'].append(layout._drawing({'items': [self.stroke]})['items'][0])
-                self.selected_item = len(drawing['items']) - 1
-            self.stroke = None
+                    self.stroke = {'type': tool, 'points': [point, point], 'color': hex_colour(self.draw_colour),
+                                   'width': self.draw_width, 'fill': self.draw_fill, 'text': '', 'size': 0.05}
+            if native.is_item_active() and not surface.state.panning:
+                if self.stroke:
+                    if tool == 'stroke':
+                        if math.dist(self.stroke['points'][-1], point) > 0.004:
+                            self.stroke['points'].append(point)
+                    else:
+                        self.stroke['points'][-1] = point
+                elif tool == 'select' and self.selected_item is not None and self.drag_origin:
+                    dx, dy = point[0] - self.drag_origin[0], point[1] - self.drag_origin[1]
+                    item = drawing['items'][self.selected_item]
+                    item['points'] = [[x + dx, y + dy] for x, y in item['points']]
+                    self.drag_origin = point
+            if native.is_item_deactivated() and self.stroke:
+                if len(self.stroke['points']) >= 2 and math.dist(self.stroke['points'][0], self.stroke['points'][-1]) > 0.005:
+                    drawing['items'].append(layout._drawing({'items': [self.stroke]})['items'][0])
+                    self.selected_item = len(drawing['items']) - 1
+                self.stroke = None
         native.end_child()
 
     @staticmethod

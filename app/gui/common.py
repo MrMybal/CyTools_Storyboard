@@ -7,6 +7,7 @@ from pathlib import Path
 from imgui_bundle import hello_imgui, imgui as native, portable_file_dialogs as pfd
 
 from ui_common import tr
+from cyui_modules.images import ImageData, ImageState, image_viewport
 
 IMAGE_FILTER = ['Images', '*.png *.jpg *.jpeg *.webp *.bmp']
 MEDIA_FILTER = ['Media', '*.png *.jpg *.jpeg *.webp *.bmp *.wav *.mp3 *.flac *.ogg *.m4a *.mp4 *.mov *.webm *.mkv']
@@ -60,6 +61,7 @@ class Textures:
 
     def __init__(self, limit=256):
         self.cache, self.limit = {}, limit
+        self.dimensions = {}
 
     def get(self, path, max_side=256):
         try:
@@ -73,18 +75,22 @@ class Textures:
             import numpy as np
             from PIL import Image
             with Image.open(path) as image:
+                self.dimensions[key]=image.size
                 image.thumbnail((max_side, max_side))
                 rgba = np.ascontiguousarray(np.asarray(image.convert('RGBA'), dtype=np.uint8))
             texture = hello_imgui.create_texture_gpu_from_rgba_data(rgba)
         except Exception:
             texture = None
         if len(self.cache) >= self.limit:
-            self.cache.pop(next(iter(self.cache)))
+            oldest=next(iter(self.cache))
+            self.cache.pop(oldest)
+            self.dimensions.pop(oldest,None)
         self.cache[key] = texture
         return texture
 
 
 textures = Textures()
+_preview_states = {}
 
 
 def image(path, width, height, max_side=512):
@@ -92,6 +98,16 @@ def image(path, width, height, max_side=512):
     texture = textures.get(path, max_side) if path else None
     if texture is None:
         return 0, 0
+    if max_side>=512:
+        key=(str(path),native.get_id('##image-preview'))
+        state=_preview_states.setdefault(key,ImageState())
+        if len(_preview_states)>256:
+            for previous in list(_preview_states)[:-128]:_preview_states.pop(previous,None)
+        stat=Path(path).stat()
+        source_width,source_height=textures.dimensions.get((str(path),stat.st_mtime_ns,max_side),(texture.width,texture.height))
+        image_viewport('##image-preview',state,ImageData(texture.texture_id(),source_width,source_height),
+                       (max(1,width),max(1,height)))
+        return width,height
     scale = min(width / max(texture.width, 1), height / max(texture.height, 1))
     w, h = max(1, texture.width * scale), max(1, texture.height * scale)
     native.image(native.ImTextureRef(texture.texture_id()), native.ImVec2(w, h))

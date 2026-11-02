@@ -1,0 +1,10 @@
+[
+  {
+    "kind": "Interface library",
+    "name": "CyUI 1.2.0 (selected Python modules)",
+    "license": "MIT",
+    "url": "https://github.com/MrMybal/CyUI/blob/main/LICENSE",
+    "repository": "https://github.com/MrMybal/CyUI",
+    "notes": "Full MIT license in LICENCES/CyUI-MIT.txt. Upstream is currently private; no upstream checkout or account is required to run this application."
+  }
+]

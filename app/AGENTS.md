@@ -68,3 +68,11 @@ estimates; do not add another in-handler queue for the same Runtime. Test indepe
 operations and hold exclusion until execution/cleanup actually stops on cancellation.
 Groups are runtime-local; keep interprocess locks when separate runtimes need them.
 Require SDK 0.10.0 or later; older SDKs do not enforce this field.
+
+## Modular CyUI maintenance
+
+Read Docs/CyUIMigration.md. cyui.py and cyui_modules/ are unmodified upstream files pinned
+and hashed in cyui-source.json. Do not patch them locally; keep product adapters outside
+the library. Refresh with scripts/sync_cyui.py from the exact revision. Preserve domain
+behavior, isolated view state, cancellation and Undo transactions; run the app suite and
+tests/test_modular_ui.py. Keep both CyUI MIT notices and the upstream license link.
