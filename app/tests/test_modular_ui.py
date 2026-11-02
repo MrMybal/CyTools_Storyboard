@@ -130,3 +130,9 @@ class StoryboardFrames(FrameCase):
             raise ValueError('Rejected edit')
         with self.assertRaises(ValueError):transaction(e,fail)
         self.assertEqual(e.board.doc,before);self.assertFalse(e.undo)
+
+
+    def test_direct_script_entrypoint_uses_package_independent_adapters(self):
+        import runpy
+        namespace=runpy.run_path(str(APP/'gui/main.py'),run_name='storyboard_entrypoint')
+        self.frame(lambda:namespace['Editor'].timeline(self.editor))

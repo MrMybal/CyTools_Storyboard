@@ -615,7 +615,7 @@ class Editor:
 
     # ------------------------------------------------------------------ timeline
     def timeline(self):
-        from .modular_views import TimelineView
+        from gui.modular_views import TimelineView
         if not hasattr(self,'_timeline_view'):self._timeline_view=TimelineView()
         self._timeline_view.draw(self)
 
@@ -634,7 +634,7 @@ class Editor:
         number = [p['id'] for p in board.panels()].index(panel['id']) + 1
         cyui.panel_header(f'{tr("Panel")} {number}', sequence['title'])
         cyui.space(4)
-        from .modular_views import PanelInspector, transaction
+        from gui.modular_views import PanelInspector, transaction
         if not hasattr(self,'_panel_inspector'):self._panel_inspector=PanelInspector()
         self._panel_inspector.draw(self,panel)
         for preset in (4,5,8,10,15):
