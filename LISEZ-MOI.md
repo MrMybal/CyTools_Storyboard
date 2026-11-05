@@ -1,5 +1,7 @@
 # CyTools Storyboard
 
+[Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview) · [English](https://mrmybal.github.io/CyTools_Storyboard/#/en/overview)
+
 Préparer un film généré plan par plan : images, durées, prompts, dialogues, caméra, son et
 références, avant de le transformer en workflow (la conversion viendra dans une version
 suivante ; le format est indépendant du générateur).
@@ -401,4 +403,4 @@ modèles). Le code propre de l'application reste sous GPL-3.0 (`LICENSE`).
 
 ## Documentation locale
 
-Dans l’application, ouvrir **Options → Ouvrir le manuel local (F1)** ou appuyer sur **F1**. Le lecteur hors ligne complet est livré dans [`app/help/index.html`](app/help/index.html). [Régénérer le manuel](app/documentation/README.md).
+Dans l’application, ouvrir **Options → Ouvrir le manuel local (F1)** ou appuyer sur **F1**. Le lecteur hors ligne complet est livré dans `app/help/index.html`. [Régénérer le manuel](app/documentation/README.md).

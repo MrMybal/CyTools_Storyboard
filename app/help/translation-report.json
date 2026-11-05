@@ -32,10 +32,16 @@
       "expectedRevision": "b47a5c670a315f1f"
     },
     {
+      "id": "guide-app-documentation-publishing",
+      "title": "Publishing the CyDoc reader",
+      "locale": "fr",
+      "expectedRevision": "0b7088a10c26fbdf"
+    },
+    {
       "id": "guide-app-documentation-readme",
       "title": "Local documentation (CyDoc)",
       "locale": "fr",
-      "expectedRevision": "7813cec244e6cdf6"
+      "expectedRevision": "eee622d948cf1d99"
     },
     {
       "id": "guide-app-documentation-validation",
@@ -47,7 +53,7 @@
       "id": "guide-app-readme",
       "title": "CyTools_Storyboard — developer notes",
       "locale": "fr",
-      "expectedRevision": "a12318829615b9d4"
+      "expectedRevision": "339101429aaaed43"
     },
     {
       "id": "guide-app-updates",
@@ -59,7 +65,7 @@
       "id": "guide-readme",
       "title": "CyTools Storyboard",
       "locale": "fr",
-      "expectedRevision": "325874a754f299c4"
+      "expectedRevision": "1d39b32d7a0a5332"
     },
     {
       "id": "licenses",

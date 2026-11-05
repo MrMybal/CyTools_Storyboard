@@ -1,5 +1,7 @@
 # CyTools_Storyboard — developer notes
 
+[Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/en/guide-app-readme) · [Français](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview)
+
 Storyboard editor built on CyToolsCore 0.10.1, MIT (scaffolded with `cytools new --desktop` on 0.9.0, migrated to
 0.10.1 on 02/10/2026: `LICENSE-CyToolsCore.txt`, `../LICENCES/`, `exclusiveGroups` on the image model operations).
 
