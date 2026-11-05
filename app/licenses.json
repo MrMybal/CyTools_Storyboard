@@ -6,5 +6,12 @@
     "url": "https://github.com/MrMybal/CyUI/blob/main/LICENSE",
     "repository": "https://github.com/MrMybal/CyUI",
     "notes": "The full MIT license and selected sources are bundled. No upstream checkout or account is required to run the application."
+  },
+  {
+    "kind": "Library",
+    "name": "CyDoc 0.1.0",
+    "license": "MIT",
+    "url": "https://github.com/MrMybal/CyDoc",
+    "notes": "Local documentation reader; full license in LICENCES/CyDoc-MIT.txt. Build dependencies are not required for reading."
   }
 ]

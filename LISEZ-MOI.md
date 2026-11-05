@@ -397,3 +397,8 @@ modèles). Le code propre de l'application reste sous GPL-3.0 (`LICENSE`).
 - Glisser des fichiers depuis l'Explorateur vers la fenêtre n'est pas géré (boutons et collage).
 - Le Python privé dépend du Python 3.11 installé sur cette machine ; lanceur Linux non exécuté.
 - Mises à jour GitHub testées avec des fixtures seulement (aucun dépôt de release n'existe).
+
+
+## Documentation locale
+
+Dans l’application, ouvrir **Options → Ouvrir le manuel local (F1)** ou appuyer sur **F1**. Le lecteur hors ligne complet est livré dans [`app/help/index.html`](app/help/index.html). [Régénérer le manuel](app/documentation/README.md).
