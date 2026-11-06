@@ -403,4 +403,4 @@ modèles). Le code propre de l'application reste sous GPL-3.0 (`LICENSE`).
 
 ## Documentation locale
 
-Dans l’application, ouvrir **Options → Ouvrir le manuel local (F1)** ou appuyer sur **F1**. Le lecteur hors ligne complet est livré dans `app/help/index.html`. [Régénérer le manuel](app/documentation/README.md).
+Dans l’application, ouvrir **Options → Ouvrir le manuel local (F1)** ou appuyer sur **F1**. Le lecteur hors ligne complet est livré dans `app/Documentation/Documentation.html`. [Régénérer le manuel](app/.CyDocBuild/README.md).

@@ -1,0 +1,623 @@
+{
+  "schemaVersion": 2,
+  "legacyPaths": {
+    "LISEZ-MOI.md": "guide-lisez-moi",
+    "README.md": "guide-readme",
+    "app/Docs/Architecture.md": "guide-app-docs-architecture",
+    "app/Docs/AutomaticInputs.md": "guide-app-docs-automaticinputs",
+    "app/Docs/CreatingYourFirstCyTool.md": "guide-app-docs-creatingyourfirstcytool",
+    "app/Docs/CyUIMigration.md": "guide-app-docs-cyuimigration",
+    "app/Docs/Dependencies.md": "guide-app-docs-dependencies",
+    "app/Docs/Downloads.md": "guide-app-docs-downloads",
+    "app/Docs/ErrorModel.md": "guide-app-docs-errormodel",
+    "app/Docs/Events.md": "guide-app-docs-events",
+    "app/Docs/FullOperationAccess.md": "guide-app-docs-fulloperationaccess",
+    "app/Docs/GenerationConfigurations.md": "guide-app-docs-generationconfigurations",
+    "app/Docs/ImplementationStatus.md": "guide-app-docs-implementationstatus",
+    "app/Docs/Index.md": "guide-app-docs-index",
+    "app/Docs/Jobs.md": "guide-app-docs-jobs",
+    "app/Docs/Licensing.md": "guide-app-docs-licensing",
+    "app/Docs/Localization.md": "guide-app-docs-localization",
+    "app/Docs/MCP.md": "guide-app-docs-mcp",
+    "app/Docs/MeshViewer.md": "guide-app-docs-meshviewer",
+    "app/Docs/Models.md": "guide-app-docs-models",
+    "app/Docs/MultiClient.md": "guide-app-docs-multiclient",
+    "app/Docs/Operations.md": "guide-app-docs-operations",
+    "app/Docs/Outputs.md": "guide-app-docs-outputs",
+    "app/Docs/Overview.md": "guide-app-docs-overview",
+    "app/Docs/Parameters.md": "guide-app-docs-parameters",
+    "app/Docs/Platforms.md": "guide-app-docs-platforms",
+    "app/Docs/Protocol.md": "guide-app-docs-protocol",
+    "app/Docs/Resources.md": "guide-app-docs-resources",
+    "app/Docs/Scheduler.md": "guide-app-docs-scheduler",
+    "app/Docs/SharedInstallation.md": "guide-app-docs-sharedinstallation",
+    "app/Docs/StandaloneDelivery.md": "guide-app-docs-standalonedelivery",
+    "app/Docs/StandaloneDiagnosticsAndModels.md": "guide-app-docs-standalonediagnosticsandmodels",
+    "app/Docs/TaskFiles.md": "guide-app-docs-taskfiles",
+    "app/Docs/ToolFinalization.md": "guide-app-docs-toolfinalization",
+    "app/Docs/ToolManifest.md": "guide-app-docs-toolmanifest",
+    "app/Docs/Transports.md": "guide-app-docs-transports",
+    "app/Docs/UnrealIntegration.md": "guide-app-docs-unrealintegration",
+    "app/Docs/UpdateExistingProducts.md": "guide-app-docs-updateexistingproducts",
+    "app/Docs/Validation.md": "guide-app-docs-validation",
+    "app/Docs/Versioning.md": "guide-app-docs-versioning",
+    "app/Docs/Workers.md": "guide-app-docs-workers",
+    "app/README.md": "guide-app-readme",
+    "app/UPDATES.md": "guide-app-updates",
+    "app/documentation/PUBLISHING.md": "guide-app-documentation-publishing",
+    "app/documentation/README.md": "guide-app-documentation-readme",
+    "app/documentation/VALIDATION.md": "guide-app-documentation-validation"
+  },
+  "aliases": {
+    "guide-app-docs-architecture": "overview",
+    "guide-app-docs-automaticinputs": "overview",
+    "guide-app-docs-creatingyourfirstcytool": "overview",
+    "guide-app-docs-cyuimigration": "overview",
+    "guide-app-docs-dependencies": "overview",
+    "guide-app-docs-downloads": "overview",
+    "guide-app-docs-errormodel": "overview",
+    "guide-app-docs-events": "overview",
+    "guide-app-docs-fulloperationaccess": "overview",
+    "guide-app-docs-generationconfigurations": "overview",
+    "guide-app-docs-implementationstatus": "overview",
+    "guide-app-docs-index": "overview",
+    "guide-app-docs-jobs": "overview",
+    "guide-app-docs-licensing": "overview",
+    "guide-app-docs-localization": "overview",
+    "guide-app-docs-mcp": "overview",
+    "guide-app-docs-meshviewer": "overview",
+    "guide-app-docs-models": "overview",
+    "guide-app-docs-multiclient": "overview",
+    "guide-app-docs-operations": "overview",
+    "guide-app-docs-outputs": "overview",
+    "guide-app-docs-overview": "overview",
+    "guide-app-docs-parameters": "overview",
+    "guide-app-docs-platforms": "overview",
+    "guide-app-docs-protocol": "overview",
+    "guide-app-docs-resources": "overview",
+    "guide-app-docs-scheduler": "overview",
+    "guide-app-docs-sharedinstallation": "overview",
+    "guide-app-docs-standalonedelivery": "overview",
+    "guide-app-docs-standalonediagnosticsandmodels": "overview",
+    "guide-app-docs-taskfiles": "overview",
+    "guide-app-docs-toolfinalization": "overview",
+    "guide-app-docs-toolmanifest": "overview",
+    "guide-app-docs-transports": "overview",
+    "guide-app-docs-unrealintegration": "overview",
+    "guide-app-docs-updateexistingproducts": "overview",
+    "guide-app-docs-validation": "overview",
+    "guide-app-docs-versioning": "overview",
+    "guide-app-docs-workers": "overview",
+    "guide-app-readme": "operations",
+    "guide-app-updates": "overview",
+    "guide-app-documentation-publishing": "overview",
+    "guide-app-documentation-readme": "overview",
+    "guide-app-documentation-validation": "overview",
+    "home": "overview",
+    "readme": "guide-readme",
+    "help": "overview",
+    "user-guide": "guide-lisez-moi",
+    "api": "operations",
+    "migration-notes": "overview",
+    "reference-app-docs-agentguide-md": "overview",
+    "reference-app-docs-agentprompt-md": "overview",
+    "reference-licences-cydoc-mit-txt": "overview",
+    "reference-licences-cytoolscore-mit-txt": "overview",
+    "reference-licences-cyui-mit-txt": "overview",
+    "reference-licences-sources-txt": "overview",
+    "reference-license": "overview",
+    "python-create-storyboard-create-storyboard": "operations",
+    "python-duplicate-storyboard-duplicate-storyboard": "operations",
+    "python-list-storyboards-list-storyboards": "operations",
+    "python-describe-storyboard-describe-storyboard": "operations",
+    "python-update-storyboard-update-storyboard": "operations",
+    "python-add-panel-add-panel": "operations",
+    "python-update-panel-update-panel": "operations",
+    "python-duplicate-panel-duplicate-panel": "operations",
+    "python-move-panel-move-panel": "operations",
+    "python-remove-panel-remove-panel": "operations",
+    "python-add-sequence-add-sequence": "operations",
+    "python-update-sequence-update-sequence": "operations",
+    "python-remove-sequence-remove-sequence": "operations",
+    "python-add-library-item-add-library-item": "operations",
+    "python-update-library-item-update-library-item": "operations",
+    "python-remove-library-item-remove-library-item": "operations",
+    "python-validate-storyboard-validate-storyboard": "operations",
+    "python-export-contact-sheet-export-contact-sheet": "operations",
+    "python-export-summary-export-summary": "operations",
+    "python-export-animatic-export-animatic": "operations",
+    "python-add-stage-add-stage": "operations",
+    "python-update-stage-update-stage": "operations",
+    "python-remove-stage-remove-stage": "operations",
+    "python-add-object-add-object": "operations",
+    "python-update-object-update-object": "operations",
+    "python-duplicate-object-duplicate-object": "operations",
+    "python-remove-object-remove-object": "operations",
+    "python-add-pose-add-pose": "operations",
+    "python-update-pose-update-pose": "operations",
+    "python-remove-pose-remove-pose": "operations",
+    "python-set-panel-layout-set-panel-layout": "operations",
+    "python-override-object-override-object": "operations",
+    "python-render-panel-layout-render-panel-layout": "operations",
+    "python-suggest-camera-move-suggest-camera-move": "operations",
+    "python-export-h3-film-export-h3-film": "operations",
+    "python-preview-h3-film-preview-h3-film": "operations",
+    "python-export-h3-workflow-export-h3-workflow": "operations",
+    "python-preview-h3-workflow-preview-h3-workflow": "operations",
+    "source-sources-tool-py": "operations",
+    "translation-report": "overview"
+  },
+  "pages": {
+    "guide-lisez-moi": {
+      "headings": [
+        "cytools-storyboard",
+        "demarrer",
+        "l-ecran",
+        "mise-en-scene-image-dessin-2d-ou-plateau-3d",
+        "film-minimax-h3-exporter-film-minimax-h3",
+        "workflow-minimax-h3-exporter-workflow-minimax-h3",
+        "poses-et-deplacements-des-personnages-onglet-mise-en-scene",
+        "controle-par-la-profondeur-ou-la-pose-plans-mis-en-scene-en-3d",
+        "images-generer-les-references-dans-l-application-onglet-images",
+        "lora",
+        "moteur-et-modeles-installation-en-haut-a-droite-de-l-onglet",
+        "les-memes-images-dans-comfyui",
+        "limites-30-09-2026"
+      ],
+      "locale": "fr"
+    },
+    "guide-readme": {
+      "headings": [
+        "workflow",
+        "requirements"
+      ],
+      "locale": "fr"
+    },
+    "installation": {
+      "headings": [
+        "start",
+        "models",
+        "storage"
+      ],
+      "locale": "fr"
+    },
+    "licenses": {
+      "headings": [
+        "application",
+        "models"
+      ],
+      "locale": "fr"
+    },
+    "operation-add-library-item": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-add-object": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-add-panel": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-add-pose": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-add-sequence": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-add-stage": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-create-storyboard": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-describe-storyboard": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-duplicate-object": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-duplicate-panel": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-duplicate-storyboard": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-export-animatic": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-export-contact-sheet": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-export-h3-film": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-export-h3-workflow": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-export-image-workflows": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-export-summary": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-generate-images": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-image-engine-status": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-install-image-engine": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-install-image-model": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-keep-generated-image": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-list-storyboards": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-move-panel": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-override-object": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-plan-images": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-preview-h3-film": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-preview-h3-workflow": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-image-model": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-library-item": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-object": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-panel": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-pose": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-sequence": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-remove-stage": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-render-panel-layout": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-set-panel-layout": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-suggest-camera-move": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-unload-image-model": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-library-item": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-object": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-panel": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-pose": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-sequence": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-stage": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-update-storyboard": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-validate-storyboard": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operation-verify-image-model": {
+      "headings": [
+        "contract",
+        "returns",
+        "behaviour"
+      ],
+      "locale": "fr"
+    },
+    "operations": {
+      "headings": [
+        "cli",
+        "mcp",
+        "task-files",
+        "operations"
+      ],
+      "locale": "fr"
+    },
+    "overview": {
+      "headings": [
+        "getting-started",
+        "topics"
+      ],
+      "locale": "fr"
+    },
+    "screenshots": {
+      "headings": [],
+      "locale": "fr"
+    },
+    "settings": {
+      "headings": [
+        "appearance",
+        "configurations",
+        "help"
+      ],
+      "locale": "fr"
+    },
+    "troubleshooting": {
+      "headings": [
+        "installation",
+        "jobs",
+        "outputs"
+      ],
+      "locale": "fr"
+    },
+    "python-create-runtime-create-runtime": {
+      "headings": [
+        "signature",
+        "returns"
+      ],
+      "locale": "fr"
+    }
+  },
+  "modules": [
+    "gallery",
+    "image"
+  ]
+}

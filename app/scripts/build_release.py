@@ -34,7 +34,7 @@ ROOT = APP.parent
 PYTHON_NUGET_VERSION = '3.11.9'
 PYTHON_NUGET_URL = 'https://www.nuget.org/api/v2/package/python/' + PYTHON_NUGET_VERSION
 SDK_REQUIREMENT = 'cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@a8d200f2d0baaade1633e0683663b4506c595f74'
-EXCLUDED_DIRS = {'__pycache__', '.pytest_cache'}
+EXCLUDED_DIRS = {'__pycache__', '.pytest_cache', '.CyDocBuild', '.CyDocExport', '.CyDocExport.previous', 'node_modules'}
 LICENCE_FILES = ('CyToolsCore-MIT.txt', 'SOURCES.txt')
 EXCLUDED_SUFFIXES = {'.pyc', '.pyo', '.obj'}
 
@@ -232,6 +232,6 @@ def main():
 if __name__ == '__main__':
     import subprocess as _doc_subprocess, sys as _doc_sys
     from pathlib import Path as _DocPath
-    _doc_build = _DocPath(__file__).resolve().parents[1] / 'documentation' / 'build.py'
+    _doc_build = _DocPath(__file__).resolve().parents[1] / '.CyDocBuild' / 'build.py'
     _doc_subprocess.run([_doc_sys.executable, str(_doc_build), '--check'], check=True)
     sys.exit(main())
