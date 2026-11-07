@@ -1,6 +1,6 @@
 # CyTools Storyboard
 
-[Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/en/overview) · [Français](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview)
+[Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/en/overview) · [Website](https://mrmybal.github.io/CyTools_Storyboard/) · [Français](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview)
 
 <p align="center">
   <img src="app/assets/branding/logo.png" alt="CyTools Storyboard logo" width="160">

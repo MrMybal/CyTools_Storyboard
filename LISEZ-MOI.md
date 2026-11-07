@@ -1,6 +1,6 @@
 # CyTools Storyboard
 
-[Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview) · [English](https://mrmybal.github.io/CyTools_Storyboard/#/en/overview)
+[Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview) · [Site web](https://mrmybal.github.io/CyTools_Storyboard/?lang=fr) · [English](https://mrmybal.github.io/CyTools_Storyboard/#/en/overview)
 
 Préparer un film généré plan par plan : images, durées, prompts, dialogues, caméra, son et
 références, avant de le transformer en workflow (la conversion viendra dans une version
