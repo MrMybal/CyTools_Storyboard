@@ -1,0 +1,187 @@
+{
+  "accent": "#f2cc76",
+  "category": {
+    "en": "Film / planning & previsualisation",
+    "fr": "Film / préparation et prévisualisation"
+  },
+  "intro": {
+    "en": "Plan the film before you generate it.",
+    "fr": "Préparez le film avant de le générer."
+  },
+  "description": {
+    "en": "Arrange timed panels, develop the camera and stage a shot in 3D. Carry references and dialogue into images, animatics and compatible film workflows.",
+    "fr": "Organisez les cases dans le temps, préparez la caméra et mettez en scène en 3D. Retrouvez références et dialogues dans les images, animatiques et workflows compatibles."
+  },
+  "audience": {
+    "en": "For directors, storyboard artists and creators preparing a film or a generated sequence.",
+    "fr": "Pour les réalisateurs, les storyboarders et les créateurs qui préparent un film ou une séquence générée."
+  },
+  "tags": [
+    {
+      "en": "Panels",
+      "fr": "Cases"
+    },
+    {
+      "en": "3D layout",
+      "fr": "Mise en scène 3D"
+    },
+    {
+      "en": "Animatics",
+      "fr": "Animatiques"
+    },
+    {
+      "en": "H3 export",
+      "fr": "Export H3"
+    }
+  ],
+  "hero": "board",
+  "heroCaption": {
+    "en": "Storyboard workspace · reference library, timed panels, inspector and timeline.",
+    "fr": "Storyboard · références, cases minutées, inspecteur et timeline."
+  },
+  "sections": [
+    {
+      "id": "board",
+      "label": {
+        "en": "01 / Board & timing",
+        "fr": "01 / Cases et durée"
+      },
+      "title": {
+        "en": "Build a sequence you can read and time.",
+        "fr": "Construisez une séquence lisible et minutée."
+      },
+      "body": {
+        "en": "Arrange panels into sequences, set their duration and transitions, and keep shot notes alongside the picture. Each panel can carry dialogue, action, camera and sound directions.",
+        "fr": "Organisez les cases en séquences, réglez durées et transitions et gardez les notes près de l’image. Chaque case peut contenir dialogues, action, caméra et indications sonores."
+      },
+      "points": [
+        {
+          "en": "Reference library linked to panels",
+          "fr": "Bibliothèque de références reliée aux cases"
+        },
+        {
+          "en": "Structured camera, action and dialogue settings",
+          "fr": "Réglages structurés de caméra, d’action et de dialogue"
+        },
+        {
+          "en": "Undo/redo and project autosave",
+          "fr": "Annulation, rétablissement et sauvegarde automatique"
+        }
+      ],
+      "image": "board",
+      "caption": {
+        "en": "Timed panels with their references and shot inspector.",
+        "fr": "Cases minutées, références et inspecteur de plan."
+      },
+      "doc": "guide-lisez-moi"
+    },
+    {
+      "id": "layout",
+      "label": {
+        "en": "02 / 3D staging",
+        "fr": "02 / Mise en scène 3D"
+      },
+      "title": {
+        "en": "Find the framing in a shared set.",
+        "fr": "Trouvez le cadre dans un décor partagé."
+      },
+      "body": {
+        "en": "Stage shots with shapes, meshes and posable mannequins. Work with shot cameras, start/end positions and character poses, then reuse the set across panels.",
+        "fr": "Mettez les plans en scène avec formes, maillages et mannequins articulés. Réglez caméras, positions de départ et d’arrivée et poses, puis réutilisez le décor dans plusieurs cases."
+      },
+      "points": [
+        {
+          "en": "Orbit, pan and zoom in the staging view",
+          "fr": "Orbite, déplacement et zoom dans la vue"
+        },
+        {
+          "en": "Pose handles and camera moves",
+          "fr": "Poignées de pose et mouvements de caméra"
+        },
+        {
+          "en": "Depth and pose guides for compatible exports",
+          "fr": "Guides de profondeur et de pose pour les exports compatibles"
+        }
+      ],
+      "image": "layout",
+      "caption": {
+        "en": "Layout workspace · mannequin, shared set and shot cameras.",
+        "fr": "Espace Layout · mannequin, décor partagé et caméras."
+      },
+      "doc": "guide-lisez-moi"
+    },
+    {
+      "id": "images",
+      "label": {
+        "en": "03 / Reference images",
+        "fr": "03 / Images de référence"
+      },
+      "title": {
+        "en": "Bring the staging into the image.",
+        "fr": "Retrouvez la mise en scène dans l’image."
+      },
+      "body": {
+        "en": "Import reference pictures or prepare images with a compatible Qwen-Image workflow. A private ComfyUI engine or a configured external ComfyUI performs the generation. Keep the recipe with each accepted image.",
+        "fr": "Importez des références ou préparez les images avec un workflow Qwen-Image compatible. La génération passe par un moteur ComfyUI privé ou un ComfyUI externe configuré. La recette accompagne chaque image conservée."
+      },
+      "points": [
+        {
+          "en": "Character and location references",
+          "fr": "Références de personnages et de lieux"
+        },
+        {
+          "en": "Shot pictures guided by the 3D staging",
+          "fr": "Images de plans guidées par la mise en scène 3D"
+        },
+        {
+          "en": "Reusable ComfyUI workflow exports",
+          "fr": "Exports de workflows ComfyUI réutilisables"
+        }
+      ],
+      "image": "images",
+      "caption": {
+        "en": "Images workspace · a shot picture and its generation settings.",
+        "fr": "Espace Images · image de plan et réglages de génération."
+      },
+      "doc": "guide-lisez-moi"
+    }
+  ],
+  "limits": {
+    "en": "Experimental Windows x64 application; Linux is unvalidated. The 3D view requires OpenGL 3.3. Local image generation needs its separate compatible GPU engine and model weights. H3 export prepares a handoff; this application does not run MiniMax H3 inference itself. Qwen-Image licences differ, including non-commercial variants.",
+    "fr": "Application Windows x64 expérimentale ; Linux n’est pas validé. La vue 3D nécessite OpenGL 3.3. La génération d’images locale demande un moteur GPU compatible et ses poids. L’export H3 prépare un transfert ; cette application n’exécute pas elle-même l’inférence MiniMax H3. Les licences Qwen-Image varient, avec des variantes non commerciales."
+  },
+  "shortName": "Storyboard",
+  "repository": "CyTools_Storyboard",
+  "private": false,
+  "licence": "GPL-3.0-only",
+  "logo": "assets/showcase/logo.png",
+  "images": {
+    "board": {
+      "file": "assets/showcase/board.webp",
+      "width": 1600,
+      "height": 980,
+      "caption": {
+        "en": "Storyboard workspace · reference library, timed panels, inspector and timeline.",
+        "fr": "Storyboard · références, cases minutées, inspecteur et timeline."
+      }
+    },
+    "layout": {
+      "file": "assets/showcase/layout.webp",
+      "width": 1600,
+      "height": 980,
+      "caption": {
+        "en": "Layout workspace · mannequin, shared set and shot cameras.",
+        "fr": "Espace Layout · mannequin, décor partagé et caméras."
+      }
+    },
+    "images": {
+      "file": "assets/showcase/images.webp",
+      "width": 1600,
+      "height": 980,
+      "caption": {
+        "en": "Images workspace · a shot picture and its generation settings.",
+        "fr": "Espace Images · image de plan et réglages de génération."
+      }
+    }
+  }
+}

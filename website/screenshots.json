@@ -1,0 +1,20 @@
+[
+  {
+    "file": "assets/showcase/board.webp",
+    "origin": "Repository screenshot: docs/screenshots/storyboard.png",
+    "originalSha256": "8f7c3b3dc8200913ce0bf4e5d6ed1d9788d156f00f935385b6d23a48e426fd19",
+    "transform": "Full frame, converted to WebP; metadata omitted. No compositing or generative editing."
+  },
+  {
+    "file": "assets/showcase/layout.webp",
+    "origin": "Repository screenshot: docs/screenshots/layout-3d.png",
+    "originalSha256": "a4d15fa4cbcce02d85da226881f4c9f66784326838928f0ef40061172b52638b",
+    "transform": "Full frame, converted to WebP; metadata omitted. No compositing or generative editing."
+  },
+  {
+    "file": "assets/showcase/images.webp",
+    "origin": "Repository screenshot: docs/screenshots/images.png",
+    "originalSha256": "d736420bdef7547d6d1539bc052d6a2276081378fcc176f40859418073eb81e3",
+    "transform": "Full frame, converted to WebP; metadata omitted. No compositing or generative editing."
+  }
+]
