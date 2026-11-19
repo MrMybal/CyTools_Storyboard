@@ -12,8 +12,8 @@
     </td>
     <td width="300" align="right" valign="top">
       <p><sub>Application license</sub><br><a href="LICENSE"><strong>GPL-3.0-only</strong></a></p>
-      <p><sub>Application version</sub><br><a href="VERSION.md"><strong>0.2.3</strong></a><br><strong>EXPERIMENTAL</strong></p>
-      <p><a href="https://github.com/MrMybal/CyTools_Storyboard/releases/download/v0.2.3/CyTools_Storyboard-0.2.3-windows-x64.zip"><strong>Download</strong></a><br><sub>Windows x64 · portable</sub></p>
+      <p><sub>Application version</sub><br><a href="VERSION.md"><strong>0.2.4</strong></a><br><strong>EXPERIMENTAL</strong></p>
+      <p><a href="https://github.com/MrMybal/CyTools_Storyboard/releases/download/v0.2.4/CyTools_Storyboard-0.2.4-windows-x64.zip"><strong>Download</strong></a><br><sub>Windows x64 · portable</sub></p>
     </td>
   </tr>
 </table>
@@ -23,7 +23,7 @@
 
 Arrange timed panels, develop the camera and stage a shot in 3D. Carry references and dialogue into images, animatics and compatible film workflows. For directors, storyboard artists and creators preparing a film or a generated sequence.
 
-> **EXPERIMENTAL · 0.2.3**
+> **EXPERIMENTAL · 0.2.4**
 >
 > Published Windows build for evaluation; some engine paths remain unvalidated. Read the [version notes and known limitations](VERSION.md).
 
@@ -72,7 +72,7 @@ Import reference pictures or prepare images with a compatible Qwen-Image workflo
 
 The published application build is **Windows x64**. The portable ZIP includes its private Python runtime and base UI/media dependencies. Models and optional heavy engines are separate downloads.
 
-1. [Download CyTools Storyboard 0.2.3](https://github.com/MrMybal/CyTools_Storyboard/releases/download/v0.2.3/CyTools_Storyboard-0.2.3-windows-x64.zip).
+1. [Download CyTools Storyboard 0.2.4](https://github.com/MrMybal/CyTools_Storyboard/releases/download/v0.2.4/CyTools_Storyboard-0.2.4-windows-x64.zip).
 2. Extract the complete ZIP into a writable folder. Keep `app/` and `runtime/` beside the launcher.
 3. Open **CyTools_Storyboard.exe**. Use the installation/model workspace for the components you need; review each component licence and any provider access conditions before download.
 
@@ -96,7 +96,7 @@ Use Python **3.11** for the base source environment. Git is needed for cloning a
 git clone https://github.com/MrMybal/CyTools_Storyboard.git
 cd CyTools_Storyboard
 py -3.11 -m venv runtime\python
-runtime\python\Scripts\python.exe -m pip install "cytools-core[mcp] @ git+https://github.com/MrMybal/CyToolsCore.git@a8d200f2d0baaade1633e0683663b4506c595f74"
+runtime\python\Scripts\python.exe -m pip install "cytools-core @ https://github.com/MrMybal/CyToolsCore/releases/download/v0.11.0/cytools_core-0.11.0-py3-none-win_amd64.whl"
 runtime\python\Scripts\python.exe -m pip install -r app\requirements.txt
 powershell -File app\build_launcher.ps1
 .\CyTools_Storyboard.exe
@@ -116,7 +116,8 @@ The exact base requirements are in [app/requirements.txt](app/requirements.txt).
 
 | Library · source | License · terms | Use / scope |
 | --- | --- | --- |
-| [CyToolsCore 0.10.1](https://github.com/MrMybal/CyToolsCore) | [MIT](LICENCES/CyToolsCore-MIT.txt) | SDK/runtime: jobs, sessions, resources, CLI and MCP. |
+| [CyToolsCore 0.11.0](https://github.com/MrMybal/CyToolsCore) | [MIT](LICENCES/CyToolsCore-MIT.txt) | SDK/runtime: jobs, sessions, resources, CLI and MCP. |
+| [CyMCPSDK 0.7.1](https://github.com/MrMybal/CyMCPSDK) | [MIT](LICENCES/CyMCPSDK-MIT.txt) | Native CLI, JSONL, HTTP and MCP. |
 | [CyUI 1.2.0](https://github.com/MrMybal/CyUI) | [MIT](LICENCES/CyUI-MIT.txt) | Selected bundled Python UI modules. |
 | [CyDoc 0.1.0](https://github.com/MrMybal/CyDoc) | [MIT](LICENCES/CyDoc-MIT.txt) | Bundled offline reader; Node/npm are authoring/build tools only. |
 | [Dear ImGui / imgui-bundle](https://github.com/pthom/imgui_bundle) | [MIT + component notices](https://github.com/pthom/imgui_bundle/blob/main/LICENSE) | Desktop renderer and its bundled native components. |
@@ -144,3 +145,10 @@ This table indexes the main components; it does not replace their complete trans
 - [Build this application](app/README.md) — source setup and application-specific commands.
 
 </details>
+
+
+## Native AI communication
+
+CyToolsCore **0.11.0** uses **CyMCPSDK 0.7.1** for native CLI, JSONL, HTTP and MCP. Discover all effective options with `ai_communication_status` (`includeOperations: true`). Export wanted task results before cleanup. This first migration requires the full Windows package; application-only updates are for installations that already have the native runtime.
+
+Source-build dependency: `cytools-core @ https://github.com/MrMybal/CyToolsCore/releases/download/v0.11.0/cytools_core-0.11.0-py3-none-win_amd64.whl`. See [developer instructions](app/README.md) for native builds.

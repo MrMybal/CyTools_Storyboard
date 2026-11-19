@@ -39,9 +39,10 @@ class MaintenanceTests(unittest.TestCase):
     def tearDown(self):
         shutil.rmtree(self.root, ignore_errors=True)
 
-    def stage(self, version, abi='cp311-win_amd64', tool_id='cy.tool.storyboard'):
+    def stage(self, version, abi=None, tool_id='cy.tool.storyboard'):
         stage = self.root / 'runtime' / 'updates' / 'tool' / ('x' * 64) / 'unpacked'
         shutil.copytree(self.root / 'app', stage / 'app', ignore=shutil.ignore_patterns('__pycache__'))
+        abi = abi or json.loads((self.root / 'app' / 'release.json').read_text('utf-8'))['runtime_abi']
         (stage / 'app' / 'release.json').write_text(json.dumps({'version': version, 'runtime_abi': abi}))
         manifest = json.loads((stage / 'app' / 'CyTool.json').read_text(encoding='utf-8'))
         manifest['id'] = tool_id

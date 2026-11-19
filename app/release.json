@@ -1,5 +1,5 @@
 {
-  "version": "0.2.3",
-  "runtime_abi": "cp311-win_amd64",
+  "version": "0.2.4",
+  "runtime_abi": "cp311-win_amd64-core0110-native",
   "repository": "MrMybal/CyTools_Storyboard"
 }

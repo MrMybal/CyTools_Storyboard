@@ -343,6 +343,8 @@ def create_runtime(data_dir, **options):
     register_operations(runtime, ROOT)
     from storyboard import imageops
     imageops.register(runtime, _open)
+    from cytools_core.communication import register_operations as register_communication
+    register_communication(runtime)
     return runtime
 
 
