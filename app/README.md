@@ -2,7 +2,7 @@
 
 [Documentation](https://mrmybal.github.io/CyTools_Storyboard/#/en/guide-app-readme) · [Français](https://mrmybal.github.io/CyTools_Storyboard/#/fr/overview)
 
-Storyboard editor built on CyToolsCore 0.11.0, MIT (scaffolded with `cytools new --desktop` on 0.9.0, migrated to
+Storyboard editor built on CyToolsCore 0.12.0, MIT (scaffolded with `cytools new --desktop` on 0.9.0, migrated to
 0.10.1 on 02/10/2026: `LICENSE-CyToolsCore.txt`, `../LICENCES/`, `exclusiveGroups` on the image model operations).
 
 | Path | Content |
@@ -36,8 +36,8 @@ From the Tool folder, with Python 3.11 and `git` on the PATH:
 
 ```
 py -3.11 -m venv runtime\python
-runtime\python\Scripts\python.exe -m pip install "cytools-core @ https://github.com/MrMybal/CyToolsCore/releases/download/v0.11.0/cytools_core-0.11.0-py3-none-win_amd64.whl"
-runtime\python\Scripts\python.exe -m pip install -r app\requirements.txt
+runtime\python\Scripts\python.exe -m pip install "cytools-core==0.12.0" --find-links app/packages
+runtime\python\Scripts\python.exe -m pip install --find-links app/packages -r app\requirements.txt
 powershell -File app\build_launcher.ps1
 ```
 
@@ -90,7 +90,7 @@ CyUI: MIT ([upstream license](https://github.com/MrMybal/CyUI/blob/main/LICENSE)
 Windows x64 source installation uses the pinned native platform wheel:
 
 ```powershell
-python -m pip install "cytools-core @ https://github.com/MrMybal/CyToolsCore/releases/download/v0.11.0/cytools_core-0.11.0-py3-none-win_amd64.whl"
+python -m pip install "cytools-core==0.12.0" --find-links app/packages
 ```
 
 The same wheel and SHA-256 are included in `app/packages/native-core.json`.

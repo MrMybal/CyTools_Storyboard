@@ -33,7 +33,7 @@ APP = Path(__file__).resolve().parents[1]
 ROOT = APP.parent
 PYTHON_NUGET_VERSION = '3.11.9'
 PYTHON_NUGET_URL = 'https://www.nuget.org/api/v2/package/python/' + PYTHON_NUGET_VERSION
-SDK_REQUIREMENT = 'cytools-core @ https://github.com/MrMybal/CyToolsCore/releases/download/v0.11.0/cytools_core-0.11.0-py3-none-win_amd64.whl'
+SDK_REQUIREMENT = str(APP / 'packages' / 'cytools_core-0.12.0-py3-none-win_amd64.whl')
 EXCLUDED_DIRS = {'__pycache__', '.pytest_cache', '.CyDocBuild', '.CyDocExport', '.CyDocExport.previous', 'node_modules'}
 LICENCE_FILES = ('CyToolsCore-MIT.txt', 'SOURCES.txt')
 EXCLUDED_SUFFIXES = {'.pyc', '.pyo', '.obj'}
@@ -107,8 +107,8 @@ def build_portable_python(destination, nupkg):
     env = dict(os.environ, PIP_DISABLE_PIP_VERSION_CHECK='1', PYTHONDONTWRITEBYTECODE='1')
     subprocess.run([str(python), '-m', 'ensurepip', '--upgrade'], check=True, env=env)
     subprocess.run([str(python), '-m', 'pip', 'install', '--no-warn-script-location', '--upgrade', 'pip'], check=True, env=env)
-    subprocess.run([str(python), '-m', 'pip', 'install', '--no-warn-script-location', SDK_REQUIREMENT], check=True, env=env)
-    subprocess.run([str(python), '-m', 'pip', 'install', '--no-warn-script-location', '--keyring-provider', 'disabled', '-r', str(APP / 'requirements.txt')], check=True, env=env)
+    subprocess.run([str(python), '-m', 'pip', 'install', '--no-warn-script-location', '--find-links', str(APP / 'packages'), SDK_REQUIREMENT], check=True, env=env)
+    subprocess.run([str(python), '-m', 'pip', 'install', '--no-warn-script-location', '--keyring-provider', 'disabled', '--find-links', str(APP / 'packages'), '-r', str(APP / 'requirements.txt')], check=True, env=env)
     # bytecode written during pip's own run is dead weight
     for cache in destination.rglob('__pycache__'):
         shutil.rmtree(cache, ignore_errors=True)
@@ -119,7 +119,7 @@ def build_portable_python(destination, nupkg):
         launcher.unlink()
     check = subprocess.run([str(python), '-c', 'import cytools_core, imgui_bundle, moderngl, trimesh, imageio_ffmpeg, numpy, PIL, psutil; '
                             'import importlib.metadata as m; md = m.metadata("cytools-core"); '
-                            'assert md["Version"] == "0.10.1" and md["License-Expression"] == "MIT", (md["Version"], md["License-Expression"]); '
+                            'assert md["Version"] == "0.12.0" and md["License-Expression"] == "MIT", (md["Version"], md["License-Expression"]); '
                             'print("ok")'],
                            capture_output=True, text=True, env=env)
     if check.returncode != 0 or 'ok' not in check.stdout:
