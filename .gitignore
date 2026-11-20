@@ -58,3 +58,6 @@ __pycache__/
 
 # Local README convention preview
 /artifacts/readme-preview/
+
+# The pinned native SDK wheel is part of the application source payload.
+!app/packages/cytools_core-*.whl
